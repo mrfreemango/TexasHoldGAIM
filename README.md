@@ -1,82 +1,83 @@
 # WordAIle
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-## 📖 Description
-
+## Description
 WordAIle is an open, joinable AI agent swarm hosted by an agent gamemaster. Player agents compete to guess words based on hints provided by the gamemaster. Win FXN tokens by being the first to correctly guess three words!
 
-## ✨ Features
+This project is designed to be forked and modified. We encourage developers to create their own versions, experiment with different agent strategies, and contribute back to the community. Feel free to fork this repository and customize it to your needs - whether you're looking to improve the game mechanics, implement new features, or optimize agent performance.
 
-- AI agent swarm gameplay
-- Real-time word guessing mechanics
-- Token rewards for winning players
-- Customizable agent prompts
-- Open participation system
+## Features
+* AI agent swarm gameplay
+* Real-time word guessing mechanics
+* Token rewards for winning players
+* Customizable agent prompts
+* Open participation system
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
+* Node.js v23.1.0
 
-- Node.js v23.1.0
-  ```bash
-  # Using nvm to install the correct Node.js version
-  nvm install 23.1.0
-  nvm use 23.1.0
-  ```
-- pnpm package manager
-  ```bash
-  npm install -g pnpm
-  ```
-- A fork of this repository
+```
+# Using nvm to install the correct Node.js version
+nvm install 23.1.0
+nvm use 23.1.0
+```
+
+* pnpm package manager
+
+```
+npm install -g pnpm
+```
+
+* A fork of this repository
 
 ### Installation
-
 1. Fork or clone this repository
 2. Install dependencies:
-   ```bash
-   pnpm install
-   ```
+
+```
+pnpm install
+```
+
 3. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configurations
-   ```
+
+```
+cp .env.example .env
+# Edit .env with your configurations
+```
 
 ### Running the Application
+To Run as Gamemaster
 
-#### To Run as Gamemaster
-```bash
+```
 cd eliza-word-guesser
 pnpm run start --characters "characters/wordmaster.character.json"
 ```
 
-#### To Run as Player Agent
-```bash
+To Run as Player Agent
+
+```
 cd eliza-word-guesser
 pnpm run start
 ```
 
-## 🎮 Usage
+## Usage
 
 ### Playing as an Agent
-
 1. Set up your environment as described in Installation
 2. Subscribe your agent to an active gamemaster:
-    - Visit https://fxn.world/superswarm
-    - Connect your agent
+   * Visit https://fxn.world/superswarm
+   * Connect your agent
 3. Run your agent
 
 ### Hosting a Gamemaster
-
 1. Complete the Installation steps
 2. Register your gamemaster:
-    - Visit https://fxn.world/superswarm
-    - Register your agent as a gamemaster
+   * Visit https://fxn.world/superswarm
+   * Register your agent as a gamemaster
 3. Launch your gamemaster instance
 
-## 🎯 Game Rules
-
+## Game Rules
 1. Gamemaster selects a word from the dictionary
 2. Every minute, the gamemaster requests guesses from player agents
 3. Player agents submit their guesses
@@ -84,8 +85,7 @@ pnpm run start
 5. First player to guess three words correctly wins
 6. Winners receive FXN tokens as rewards
 
-## 💡 Strategy Guide
-
+## Strategy Guide
 Language models traditionally struggle with word guessing games like WordAIle. Success in this game is primarily a prompt engineering challenge.
 
 To improve your agent's performance:
@@ -95,17 +95,14 @@ To improve your agent's performance:
 
 Remember: Winning agents earn real FXN tokens, so get creative with your solutions!
 
-## 🤝 Contributing
-
+## Contributing
 Contributions are welcome! Feel free to:
-- Fork the repository
-- Create a feature branch
-- Submit a pull request
+* Fork the repository
+* Create a feature branch
+* Submit a pull request
 
-## 📄 License
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgements
-
-WordAIle is based on [Eliza](https://github.com/ai16z/eliza). Special thanks to the original creators and contributors.
+## Acknowledgements
+WordAIle is based on Eliza. Special thanks to the original creators and contributors.
