@@ -141,6 +141,8 @@ export class PokerManager {
 
                         this.actionHistory.push([seatIndex, action, betSize]);
                     }
+
+                    // @TODO figure out how to loop back for the next players turn
                 }
             } catch (error) {
                 console.error(`Error communicating with subscriber:`, error);
