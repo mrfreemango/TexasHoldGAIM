@@ -71,6 +71,7 @@ export class FxnClient extends EventEmitter {
         return Promise.allSettled(promises);
     }
 
+    // Only broadcast to a specific subscriber
     public async broadcastToSubscriber(content: any, subscriber: SubscriberDetails) {
         try {
             const privateKey = this.runtime.getSetting("WALLET_PRIVATE_KEY")!;

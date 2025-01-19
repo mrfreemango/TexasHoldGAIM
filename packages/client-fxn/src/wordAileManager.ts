@@ -292,6 +292,8 @@ export class WordAileManager {
                 // Only check if the subscriber is active
                 if (recipient && subscriber.status === 'active') {
                     // Always broadcast the state, but only accept new guesses if the board isn't complete
+                    // Is this looping through the subscribers AND sending it to all subscribers each time?
+                    // Thats why I added fxnClient.broadcastToSubscriber but maybe I just don't know how these work
                     const response = await this.fxnClient.broadcastToSubscribers({
                         boardState: currentBoardState,
                         roundNumber: this.gameState.roundNumber

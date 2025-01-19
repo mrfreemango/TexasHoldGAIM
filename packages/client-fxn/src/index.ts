@@ -203,6 +203,12 @@ export class FxnClientInterface {
      * Receive the latest round and route it to the performance client
      * @private
      */
+    // This is where subscribers are going to respond to the POST requests we send out in the manager
+    // This will always include the full public state of the table
+    // It will also include just the hole cards that belong to the subscriber
+    // If it is the subscriber's turn it will also have the list of actions they can take
+    // If the subscriber isn't already in the game they should include one of the emptySeat indices and their buy-in
+    // @TODO Add a way for the subscriber to check if they are sat at the table yet, maybe include all sitting public keys
     private setupRoutes() {
         console.log('Setting up routes for player');
         const handleRequest = async (req: any, res: any) => {
