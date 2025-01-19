@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import {
     IAgentRuntime,
 } from "@ai16z/eliza/src/types.ts";
-import { SolanaAdapter } from 'fxn-protocol-sdk';
+import { SolanaAdapter, SubscriberDetails } from 'fxn-protocol-sdk';
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
 import { Connection, Keypair, PublicKey } from '@solana/web3.js';
 import bs58 from 'bs58';
@@ -71,11 +71,37 @@ export class FxnClient extends EventEmitter {
         return Promise.allSettled(promises);
     }
 
+    public async broadcastToSubscriber(content: any, subscriber: SubscriberDetails) {
+        try {
+            const privateKey = this.runtime.getSetting("WALLET_PRIVATE_KEY")!;
+            const privateKeyUint8Array = bs58.decode(privateKey);
+            // Create keypair from private key
+            const keypair = Keypair.fromSecretKey(privateKeyUint8Array);
+
+            const signedPayload = await signMessage(keypair, content);
+            const recipient = subscriber.subscription?.recipient;
+
+            console.log('Subscriber fields are ', recipient, subscriber.status);
+
+            if (recipient && subscriber.status === 'active') {
+                return fetch(recipient, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(signedPayload)
+                });
+            }
+        } catch (error) {
+            console.error(`Failed to broadcast to subscriber`, subscriber, error);
+        }
+    }
+
     /**
      * Retrieve the Host's subscriber list from FXN
      * @protected
      */
-    public async getSubscribers(): Promise<any[]> {
+    public async getSubscribers(): Promise<SubscriberDetails[]> {
         const agentId = new PublicKey(this.runtime.getSetting("WALLET_PUBLIC_KEY"));
         return this.solanaAdapter.getSubscriptionsForProvider(agentId);
     }
