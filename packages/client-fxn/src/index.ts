@@ -23,7 +23,7 @@ export class FxnClientInterface {
         this.app = express();
         this.app.use(bodyParser.json());
 
-        const role = this.runtime.getSetting("FXN_ROLE");
+        const role = this.runtime.getSetting("GAIM_ROLE");
         console.log('FXN Role is ', role);
         if (role) {
             this.setupGame(role);

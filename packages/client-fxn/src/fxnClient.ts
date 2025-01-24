@@ -169,7 +169,7 @@ export class FxnClient extends EventEmitter {
         amount: number
     ): Promise<TransferResult> {
         try {
-            const rewardTokenCA = this.runtime.getSetting('REWARD_TOKEN_CA');
+            const rewardTokenCA = this.runtime.getSetting('GAIM_MAINNET_REWARD_TOKEN');
             if (!rewardTokenCA) {
                 throw new Error('Reward token CA not configured');
             }
