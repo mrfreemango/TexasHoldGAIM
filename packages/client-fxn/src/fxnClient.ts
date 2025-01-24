@@ -104,7 +104,12 @@ export class FxnClient extends EventEmitter {
      */
     public async getSubscribers(): Promise<SubscriberDetails[]> {
         const agentId = new PublicKey(this.runtime.getSetting("WALLET_PUBLIC_KEY"));
-        return this.solanaAdapter.getSubscriptionsForProvider(agentId);
+        try {
+            return this.solanaAdapter.getSubscriptionsForProvider(agentId);
+        } catch (error) {
+            console.log("No subscribers found!");
+            return [];
+        }
     }
 
     /**
