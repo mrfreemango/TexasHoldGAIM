@@ -4,7 +4,7 @@ import {
 } from "@ai16z/eliza/src/types.ts";
 import { SolanaAdapter, SubscriberDetails } from 'fxn-protocol-sdk';
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, TransactionSignature } from '@solana/web3.js';
 import bs58 from 'bs58';
 import {signMessage} from "./utils/signingUtils.ts";
 import {
@@ -32,6 +32,17 @@ export class FxnClient extends EventEmitter {
         this.runtime = runtime;
         const provider = this.createAnchorProvider();
         this.solanaAdapter = new SolanaAdapter(provider);
+    }
+
+    public async subscribeToProvider(providerPublicKey: string): Promise<TransactionSignature> {
+        const dataProvider = new PublicKey(providerPublicKey);
+        try {
+            const subscription =  await this.solanaAdapter.requestSubscription({dataProvider});
+            console.log("Requested subscription ", subscription);
+            return subscription;
+        } catch (error) {
+            console.error("Failed to subscribe to provider.", providerPublicKey);
+        }
     }
 
     /**

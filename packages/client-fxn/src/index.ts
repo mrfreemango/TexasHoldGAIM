@@ -31,11 +31,12 @@ export class FxnClientInterface {
     }
 
     private setupGame(role: string) {
+        this.fxnClient = new FxnClient({ runtime: this.runtime });
         if (role === 'PLAYER') {
+            this.subscribeToHost();
             this.setupRoutes();
         }
         if (role === 'HOST') {
-            this.fxnClient = new FxnClient({ runtime: this.runtime });
             this.setupGameLoop();
             this.setupHostRoutes();
         }
@@ -43,6 +44,11 @@ export class FxnClientInterface {
         this.app.listen(port, () => {
             console.log(`Server running on port ${port}`);
         });
+    }
+
+    private async subscribeToHost() {
+        console.log("Subscribing to host provider");
+        return this.fxnClient.subscribeToProvider(this.runtime.getSetting("GAME_MASTER_KEY"));
     }
 
     private async loadTemplate(): Promise<string> {
