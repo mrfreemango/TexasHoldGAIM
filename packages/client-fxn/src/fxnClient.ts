@@ -60,10 +60,17 @@ export class FxnClient extends EventEmitter {
 
         console.log("Found gamemaster: " + hostDetails.name);
 
-        // Subscribe to it if we aren't already
+        // Subscribe to the host or renew our subscription
         const subscriptions = await this.getSubscriptions();
-        if (!subscriptions.find((subscription) => {subscription.dataProvider == this.hostPublicKey})) {
+        const subscribed = subscriptions.find((subscription) => {
+            console.log(subscription.dataProvider.toString() == this.hostPublicKey.toString());
+            return subscription.dataProvider.toString() == this.hostPublicKey.toString();
+        });
+
+        if (!subscribed) {
             await this.subscribeToHost();
+        } else {
+            await this.resubscribeToToHost(subscribed);
         }
     }
 
@@ -137,6 +144,17 @@ export class FxnClient extends EventEmitter {
             console.log("Created subscription", subSig);
             return subSig;
         }
+    }
+
+    public async resubscribeToToHost(currentSubscription: SubscriptionDetails) {
+        const url = this.runtime.getSetting("GAIM_PLAYER_URL");
+        const port = this.runtime.getSetting("SERVER_PORT");
+        await this.solanaAdapter.renewSubscription({
+            dataProvider: this.hostPublicKey,
+            newRecipient: `${url}:${port}`,
+            newEndTime: 5, // @TODO Figure out endtime (or hopefully we can cancel subscriptions soon)
+            qualityScore: 100
+        });
     }
 
     public async getSubscriptionRequests() {
