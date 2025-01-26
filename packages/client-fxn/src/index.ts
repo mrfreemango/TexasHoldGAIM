@@ -24,7 +24,7 @@ export class FxnClientInterface {
         this.app.use(bodyParser.json());
 
         const role = this.runtime.getSetting("GAIM_ROLE");
-        console.log('GAIM Role is ', role);
+        console.log('GAIM Role is', role);
         if (role) {
             this.setupGame(role);
         }
@@ -225,7 +225,7 @@ export class FxnClientInterface {
                 console.log('board is', req.body);
 
                 // Get the game master's public key
-                const gameMasterKey = this.runtime.getSetting("GAME_MASTER_KEY");
+                const gameMasterKey = this.runtime.getSetting("GAIM_HOST_PUBLIC_KEY");
 
                 // Verify that the message came from the game master
                 const verificationResult = await verifyMessage({

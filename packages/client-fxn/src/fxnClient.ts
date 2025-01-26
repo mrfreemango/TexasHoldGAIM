@@ -59,6 +59,9 @@ export class FxnClient extends EventEmitter {
         }
 
         console.log("Found gamemaster: " + hostDetails.name);
+        console.log("Current Subscribers:");
+        const hostSubscribers = await this.getHostSubscribers();
+        console.log(hostSubscribers);
 
         // Subscribe to the host or renew our subscription
         const subscriptions = await this.getSubscriptions();
@@ -68,9 +71,11 @@ export class FxnClient extends EventEmitter {
         });
 
         if (!subscribed) {
+            console.log("Subscribing to host.");
             await this.subscribeToHost();
         } else {
-            await this.resubscribeToToHost(subscribed);
+            console.log("Already subscribed to host.");
+            console.log(subscribed);
         }
     }
 
@@ -126,6 +131,8 @@ export class FxnClient extends EventEmitter {
 
     public async subscribeToHost(): Promise<TransactionSignature> {
         const hostParams = await this.getHostParams();
+        console.log("Host Params:");
+        console.log(hostParams);
         if (hostParams.restrict_subscriptions) {
             // Request a subscription
             const subscriptionSig =  await this.solanaAdapter.requestSubscription({dataProvider: this.hostPublicKey});
@@ -146,13 +153,9 @@ export class FxnClient extends EventEmitter {
         }
     }
 
-    public async resubscribeToToHost(currentSubscription: SubscriptionDetails) {
-        const url = this.runtime.getSetting("GAIM_PLAYER_URL");
-        const port = this.runtime.getSetting("SERVER_PORT");
-        await this.solanaAdapter.renewSubscription({
+    public async unsubscribeFromHost(): Promise<TransactionSignature> {
+        return await this.solanaAdapter.cancelSubscription({
             dataProvider: this.hostPublicKey,
-            newRecipient: `${url}:${port}`,
-            newEndTime: 5, // @TODO Figure out endtime (or hopefully we can cancel subscriptions soon)
             qualityScore: 100
         });
     }
@@ -240,14 +243,19 @@ export class FxnClient extends EventEmitter {
         }
     }
 
-    /**
-     * Retrieve the Host's subscriber list from FXN
-     * @protected
-     */
     public async getSubscribers(): Promise<SubscriberDetails[]> {
         const agentId = new PublicKey(this.runtime.getSetting("WALLET_PUBLIC_KEY"));
         try {
             return await this.solanaAdapter.getSubscriptionsForProvider(agentId);
+        } catch (error) {
+            console.log("No subscribers found!");
+            return [];
+        }
+    }
+
+    public async getHostSubscribers(): Promise<SubscriberDetails[]> {
+        try {
+            return await this.solanaAdapter.getSubscriptionsForProvider(this.hostPublicKey);
         } catch (error) {
             console.log("No subscribers found!");
             return [];
