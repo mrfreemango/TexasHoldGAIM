@@ -4,7 +4,7 @@ import {
 } from "@ai16z/eliza/src/types.ts";
 import { SolanaAdapter, SubscriberDetails } from 'fxn-protocol-sdk';
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
-import { Connection, Keypair, PublicKey, TransactionSignature } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
 import bs58 from 'bs58';
 import {signMessage} from "./utils/signingUtils.ts";
 import {
@@ -14,7 +14,7 @@ import {
     getMint,
     TOKEN_PROGRAM_ID
 } from "@solana/spl-token";
-import { Transaction } from "@solana/web3.js";
+import { AgentParams, SubscriptionDetails } from "fxn-protocol-sdk/dist/client/fxn-solana-adapter";
 
 interface TransferResult {
     signature: string;
@@ -26,23 +26,134 @@ interface TransferResult {
 export class FxnClient extends EventEmitter {
     protected runtime: IAgentRuntime;
     private solanaAdapter: SolanaAdapter;
+    private hostPublicKey: PublicKey;
+    private requestsTimer: NodeJS.Timeout | null = null;
 
     constructor({ runtime }: { runtime: IAgentRuntime }) {
         super();
         this.runtime = runtime;
         const provider = this.createAnchorProvider();
         this.solanaAdapter = new SolanaAdapter(provider);
+        this.hostPublicKey = new PublicKey(this.runtime.getSetting("GAIM_HOST_PUBLIC_KEY"));
+        this.initialize();
     }
 
-    public async subscribeToProvider(providerPublicKey: string): Promise<TransactionSignature> {
-        const dataProvider = new PublicKey(providerPublicKey);
-        try {
-            const subscription =  await this.solanaAdapter.requestSubscription({dataProvider});
-            console.log("Requested subscription ", subscription);
-            return subscription;
-        } catch (error) {
-            console.error("Failed to subscribe to provider.", providerPublicKey);
+    private async initialize() {
+        const role = this.runtime.getSetting("GAIM_ROLE");
+        if (role == "HOST") {
+            await this.initializeHost();
+            console.log("Host provider initialized.");
         }
+        if (role == "PLAYER") {
+            await this.initializePlayer();
+            console.log("Player initialized.");
+        }
+    }
+
+    private async initializePlayer() {
+        // Find our gamemaster
+        const hostDetails = await this.getHostParams();
+        if (!hostDetails) {
+            console.error("Error: Failed to find GAIM host with key", this.hostPublicKey.toString());
+            return;
+        }
+
+        console.log("Found gamemaster: " + hostDetails.name);
+
+        // Subscribe to it if we aren't already
+        const subscriptions = await this.getSubscriptions();
+        if (!subscriptions.find((subscription) => {subscription.dataProvider == this.hostPublicKey})) {
+            await this.subscribeToHost();
+        }
+    }
+
+    private async initializeHost() {
+        // Register this gamemaster with FXN if we haven't already
+        let hostDetails = await this.getHostParams();
+        if (!hostDetails) {
+            const regSig = await this.registerHost();
+            console.log("Host registered: ", regSig);
+
+            hostDetails = await this.getHostParams();
+        }
+
+        console.log("Found gamemaster: " + hostDetails.name);
+
+        // If players have to request subscriptions, start the approval cycle
+        if (hostDetails.restrict_subscriptions) {
+            this.startApproveRequestsCycle();
+        }
+    }
+
+    private async startApproveRequestsCycle() {
+        if (this.requestsTimer) {
+            clearTimeout(this.requestsTimer);
+        }
+
+        await this.approveAllSubscriptionRequests();
+
+        const duration = parseFloat(this.runtime.getSetting("GAIM_HOST_APPROVE_REQUESTS_INTERVAL"));
+        this.requestsTimer = setTimeout(this.startApproveRequestsCycle, duration)
+    }
+
+    public async getHostParams(): Promise<AgentParams> | null {
+        try {
+            return await this.solanaAdapter.getAgentDetails(this.hostPublicKey);
+        } catch (error) {
+            console.log("Failed to find host", this.hostPublicKey.toString());
+            return;
+        }
+    }
+
+    public async registerHost(): Promise<TransactionSignature> {
+        const agentParams = {
+            name: this.runtime.getSetting("GAIM_HOST_NAME"),
+            description: this.runtime.getSetting("GAIM_HOST_DESCRIPTION"),
+            restrict_subscriptions: this.runtime.getSetting("GAIM_HOST_RESTRICT_SUBSCRIPTIONS") == "true",
+            capabilities: ["text post"],
+            fee: parseFloat(this.runtime.getSetting("GAIM_HOST_FEE"))
+        }
+
+        return this.solanaAdapter.registerAgent(agentParams);
+    }
+
+    public async subscribeToHost(): Promise<TransactionSignature> {
+        const hostParams = await this.getHostParams();
+        if (hostParams.restrict_subscriptions) {
+            // Request a subscription
+            const subscriptionSig =  await this.solanaAdapter.requestSubscription({dataProvider: this.hostPublicKey});
+            console.log("Requested subscription", subscriptionSig);
+            return subscriptionSig;
+        } else {
+            // Create a subscription
+            const [subSig, _] = await this.solanaAdapter.createSubscription({
+                dataProvider: this.hostPublicKey,
+                recipient: this.runtime.getSetting("GAIM_PLAYER_URL"),
+                durationInDays: 30
+            });
+
+            console.log("Created subscription", subSig);
+            return subSig;
+        }
+    }
+
+    public async getSubscriptionRequests() {
+        const dataProvider = new PublicKey(this.runtime.getSetting("WALLET_PUBLIC_KEY"));
+        return await this.solanaAdapter.getSubscriptionRequests(dataProvider);
+    }
+
+    public async approveAllSubscriptionRequests() {
+        const requests = await this.getSubscriptionRequests();
+        const unapproved = requests.filter((request) => {!request.approved});
+        console.log(unapproved.length, "pending requests to approve.")
+
+        unapproved.forEach(async (request, index) => {
+            const approveSig = await this.solanaAdapter.approveSubscriptionRequest({
+                subscriberAddress: request.subscriberPubkey,
+                requestIndex: index
+            });
+            console.log("Approved request from", request.subscriberPubkey, approveSig);
+        });
     }
 
     /**
@@ -119,6 +230,16 @@ export class FxnClient extends EventEmitter {
             return await this.solanaAdapter.getSubscriptionsForProvider(agentId);
         } catch (error) {
             console.log("No subscribers found!");
+            return [];
+        }
+    }
+
+    public async getSubscriptions(): Promise<SubscriptionDetails[]> {
+        const agentId = new PublicKey(this.runtime.getSetting("WALLET_PUBLIC_KEY"));
+        try {
+            return await this.solanaAdapter.getAllSubscriptionsForUser(agentId);
+        } catch (error) {
+            console.log("No subscriptions found!");
             return [];
         }
     }
