@@ -1,9 +1,9 @@
 import { FxnClient } from "./fxnClient.ts";
-import Table from "poker-ts/dist/lib/table";
-import Action, { ActionRange }  from "poker-ts/dist/lib/dealer";
-import Hand from "poker-ts/dist/lib/hand";
-import Card from "poker-ts/dist/lib/card";
-import CommunityCards, { RoundOfBetting } from "poker-ts/dist/lib/community-cards";
+import Table from "poker-ts/dist/lib/table.js";
+import Action, { ActionRange }  from "poker-ts/dist/lib/dealer.js";
+import Hand from "poker-ts/dist/lib/hand.js";
+import Card from "poker-ts/dist/lib/card.js";
+import CommunityCards, { RoundOfBetting } from "poker-ts/dist/lib/community-cards.js";
 
 declare type SeatIndex = number;
 declare type HoleCards = [Card, Card];
