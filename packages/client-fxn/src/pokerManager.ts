@@ -1,12 +1,15 @@
-import {FxnClient} from "./fxnClient.ts";
-import {Table} from "poker-ts";
-import Poker, { Action, Card } from "poker-ts/dist/facade/poker";
-import ChipRange from "poker-ts/dist/lib/chip-range";
+import { FxnClient } from "./fxnClient.ts";
+import Table from "poker-ts/dist/lib/table";
+import Action, { ActionRange }  from "poker-ts/dist/lib/dealer";
+import Hand from "poker-ts/dist/lib/hand";
+import Card from "poker-ts/dist/lib/card";
+import CommunityCards, { RoundOfBetting } from "poker-ts/dist/lib/community-cards";
 
 declare type SeatIndex = number;
+declare type HoleCards = [Card, Card];
 declare type PublicKey = string;
-declare type BetSize = number;
-declare type ActionHistoryEntry = [SeatIndex, Action, BetSize];
+declare type BetSize = number | null;
+declare type ActionHistoryEntry = [RoundOfBetting, SeatIndex, Action, BetSize];
 declare type ActionHistory = Array<ActionHistoryEntry>;
 
 interface Player {
@@ -21,11 +24,6 @@ interface ForcedBets {
     smallBlind: BetSize
 }
 
-interface ActionRange {
-    actions: Action[],
-    chipRange?: ChipRange
-}
-
 // Stuff that everyone at the table can know
 interface TableState {
     players: Array<Player>,
@@ -37,14 +35,15 @@ interface TableState {
     button: SeatIndex,
     isBettingRoundInProgress: boolean,
     areBettingRoundsCompleted: boolean,
-    roundOfBetting: string,
-    communityCards: Array<Card>
+    roundOfBetting: RoundOfBetting,
+    communityCards: CommunityCards,
+    winners: [SeatIndex, Hand, HoleCards][][]
 }
 
 // Stuff that should be kept secret from other players
 interface PlayerState {
     legalActions: ActionRange,
-    holeCards: [Card, Card]
+    holeCards: HoleCards
 }
 
 const ANTE: BetSize = 0;
@@ -53,12 +52,13 @@ const SMALL_BLIND: BetSize = 5;
 const MAX_PLAYERS: number = 9; // Max of 23 set by poker-ts
 
 export class PokerManager {
-    private table: Poker
+    private table: Table
     private tableState: TableState;
     private actionHistory: ActionHistory;
     private playerKeys: Map<SeatIndex, PublicKey>;
     private playerSeats: Map<PublicKey, SeatIndex>;
-    private readonly TABLE_EMPTY_DELAY: number = 30 * 1000; // 30s delay
+    public readonly TABLE_EMPTY_DELAY: number = 30 * 1000; // 30s delay
+    public readonly NEW_HAND_DELAY: number = 30 * 1000; // 30s delay
     private tableEmptyTimer: NodeJS.Timeout | null = null;
 
     constructor(private fxnClient: FxnClient) {
@@ -67,8 +67,8 @@ export class PokerManager {
     }
 
     private async startNewGame(): Promise<void> {
-        console.log("Trying to start a new game.");
-        this.actionHistory = new Array<[SeatIndex, Action, BetSize]>();
+        console.log("Starting a new game.");
+        this.actionHistory = new Array<[RoundOfBetting, SeatIndex, Action, BetSize]>();
         this.tableState.emptySeats = this.getEmptySeats();
 
         if (this.tableState.emptySeats.length > 0) {
@@ -92,21 +92,43 @@ export class PokerManager {
         {
             // We have at least 2 players and can start the game
             console.log("Starting the game.");
-            await this.startNewHand();
+            this.startNewHand();
         }
     }
 
     private async startNewHand(): Promise<void> {
         console.log("Starting new hand.");
         this.table.startHand();
+        this.updateTableState();
 
-        await this.BroadcastRound();
+        this.BroadcastHand();
     }
 
-    private async BroadcastRound(): Promise<void> {
+    private async BroadcastHand(): Promise<void> {
+        while (this.tableState.isHandInProgress) {
+            while (this.tableState.isBettingRoundInProgress) {
+                await this.BroadcastBettingRound();
+                this.updateTableState();
+            }
+
+            console.log("Betting round over.");
+            this.table.endBettingRound();
+            this.updateTableState();
+
+            if (this.tableState.areBettingRoundsCompleted) {
+                await this.BroadcastShowdown();
+            }
+        }
+
+        console.log("Hand over! Starting next hand in 30s.");
+        setTimeout(this.startNewHand, this.NEW_HAND_DELAY);
+    }
+
+    private async BroadcastBettingRound() {
+        console.log("Starting betting round: " + this.tableState.roundOfBetting);
+
         const playerToActSeat: SeatIndex = this.table.playerToAct();
         const playerToActKey: PublicKey = this.playerKeys.get(playerToActSeat);
-        this.updateTableState();
 
         const subscribers = await this.fxnClient.getSubscribers();
 
@@ -122,27 +144,43 @@ export class PokerManager {
                 if (recipient && subscriberDetails.status === 'active') {
                     console.log("Broadcasting to " + recipient + " with state " + playerState);
 
-                    const response = await this.fxnClient.broadcastToSubscriber({
-                        tableState: this.tableState,
-                        playerState: playerState,
-                        actionHistory: this.actionHistory
-                    }, subscriberDetails);
+                    if (publicKey == playerToActKey) {
+                        // It is this player's turn
+                        
+                        // Await their response
+                        const response = await this.fxnClient.broadcastToSubscriber({
+                            tableState: this.tableState,
+                            playerState: playerState,
+                            actionHistory: this.actionHistory
+                        }, subscriberDetails);
+                        console.log("Response: " + response);
 
-                    console.log("Response: " + response);
-
-                    // Player to act response should include an action
-                    if (publicKey == playerToActKey && response && response.ok) {
+                        // Parse their chosen action
                         const responseData = await response.json();
                         const action = responseData.action;
                         const betSize = responseData.betSize;
 
+                        // TODO: Validate
+
+                        // Send the action to the table
                         console.log("Seat: " + seatIndex + " Action: " + action + " Bet: " + betSize);
                         this.table.actionTaken(action, betSize ? betSize : null);
 
-                        this.actionHistory.push([seatIndex, action, betSize]);
-                    }
+                        // Add it to the history
+                        const bettingRound = this.tableState.roundOfBetting;
+                        this.actionHistory.push([bettingRound, seatIndex, action, betSize]);
 
-                    // @TODO figure out how to loop back for the next players turn
+                        return response;
+                    } else {
+                        // It is not this player's turn
+
+                        // Give them their update async
+                        return this.fxnClient.broadcastToSubscriber({
+                            tableState: this.tableState,
+                            playerState: playerState,
+                            actionHistory: this.actionHistory
+                        }, subscriberDetails);
+                    }
                 }
             } catch (error) {
                 console.error(`Error communicating with subscriber:`, error);
@@ -150,6 +188,55 @@ export class PokerManager {
         });
 
         await Promise.all(promises);
+    }
+
+    private async BroadcastShowdown() {
+        console.log("Starting showdown.");
+
+        // If there is only one pot with one eligible player, they won't show up in winners() so add them here
+        const pots = this.table.pots();
+        if (pots.length == 1 && pots[0].eligiblePlayers.length == 1) {
+            const winnerSeatIndex = pots[0].eligiblePlayers[0];
+            const winnerHoleCards: Card[] = this.table.holeCards[winnerSeatIndex];
+            const communityCards = this.table.communityCards();
+            const winnerHand = Hand.create(winnerHoleCards, communityCards);
+            this.tableState.winners.push([winnerSeatIndex, { 
+                cards: winnerHoleCards,
+                ranking: winnerHand.ranking,
+                strength: winnerHand.strength
+            }, communityCards.cards()])
+        }
+
+        this.table.showdown();
+        
+        if (this.table.winners().length != 0) {
+            this.tableState.winners = this.table.winners();
+        }
+        this.updateTableState();
+
+        const subscribers = await this.fxnClient.getSubscribers();
+
+        // Broadcast to all subscribers
+        const promises = subscribers.map(async (subscriberDetails) => {
+            try {
+                const publicKey = subscriberDetails.subscriber.toString();
+                const recipient = subscriberDetails.subscription?.recipient;
+                const playerState = this.getPlayerState(publicKey);
+
+                // Only broadcast if the subscriber is active
+                if (recipient && subscriberDetails.status === 'active') {
+                    return this.fxnClient.broadcastToSubscriber({
+                        tableState: this.tableState,
+                        playerState: playerState,
+                        actionHistory: this.actionHistory
+                    }, subscriberDetails);
+                }
+            } catch (error) {
+                console.error(`Error communicating with subscriber:`, error);
+            }
+        });
+
+        return Promise.all(promises);
     }
 
     private getPlayerState(publicKey: PublicKey): PlayerState {
@@ -168,16 +255,18 @@ export class PokerManager {
         this.tableState.forcedBets = this.table.forcedBets();
 
         // We can only get these when the hand is in progress
-        const handinProgress = this.table.isHandInProgress();
+        const handinProgress = this.table.handInProgress();
         this.tableState.isHandInProgress = handinProgress;
 
         this.tableState.playerToActSeat = handinProgress ? this.table.playerToAct() : null;
         this.tableState.button = handinProgress ? this.table.button() : null;
-        this.tableState.isBettingRoundInProgress = handinProgress ? this.table.isBettingRoundInProgress() : null;
-        this.tableState.areBettingRoundsCompleted = handinProgress ? this.table.areBettingRoundsCompleted() : null;
+        this.tableState.isBettingRoundInProgress = handinProgress ? this.table.bettingRoundInProgress() : null;
         this.tableState.roundOfBetting = handinProgress ? this.table.roundOfBetting() : null;
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : null;
-
+        
+        const bettingRoundsCompleted = handinProgress ? this.table.bettingRoundsCompleted() : null;
+        this.tableState.areBettingRoundsCompleted = bettingRoundsCompleted;
+        
         console.log("Table state: " + this.tableState);
     }
 
