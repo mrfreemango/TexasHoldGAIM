@@ -57,7 +57,7 @@ export class PokerManager {
     private actionHistory: ActionHistory;
     private playerKeys: Map<SeatIndex, PublicKey>;
     private playerSeats: Map<PublicKey, SeatIndex>;
-    public readonly TABLE_EMPTY_DELAY: number = 30 * 1000; // 30s delay
+    public readonly TABLE_EMPTY_DELAY: number = 10 * 1000; // 30s delay
     public readonly NEW_HAND_DELAY: number = 30 * 1000; // 30s delay
     private tableEmptyTimer: NodeJS.Timeout | null = null;
 
@@ -72,14 +72,21 @@ export class PokerManager {
         this.tableState.emptySeats = this.getEmptySeats();
 
         if (this.tableState.emptySeats.length > 0) {
-            // We have empty seats, broadcast them to subscribers
-
-            // @TODO POST
-            // response: {chosenSeat: SeatIndex, buyIn: number}
-            // this.addPlayer(publicKey, chosenSeat, buyIn)
+            // We have empty seats, seat any subscribers
+            
+            const subscribers = await this.fxnClient.getHostSubscribers();
+            subscribers.forEach((subscriberDetails) => {
+                const publicKey = subscriberDetails.subscriber.toString();
+                if (!this.playerSeats.get(publicKey)) {
+                    const seatIndex = this.getEmptySeats().pop();
+                    const buyIn = 300;
+                    this.addPlayer(publicKey, seatIndex, buyIn);
+                    console.log(`Seated ${publicKey} at chair ${seatIndex} with ${buyIn} chips.`);
+                }
+            });
         }
 
-        if (this.getFilledSeats.length < 2) {
+        if (this.getFilledSeats().length < 2) {
             // There are less than 2 players at the table, check again in X seconds
             if (this.tableEmptyTimer) {
                 clearTimeout(this.tableEmptyTimer);
