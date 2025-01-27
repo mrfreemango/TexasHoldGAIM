@@ -14,8 +14,7 @@
         "body-parser": "1.20.3",
         "cors": "2.8.5",
         "fxn-protocol-sdk": "https://github.com/Oz-Networks/fxn-protocol-sdk#main",
-        "multer": "1.4.5-lts.1",
-        "poker-ts": "^1.4.1"
+        "multer": "1.4.5-lts.1"
     },
     "devDependencies": {
         "@types/jest": "^29.0.0",
