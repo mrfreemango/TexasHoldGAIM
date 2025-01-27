@@ -172,10 +172,10 @@ export class PokerManager {
 
                 // Only broadcast if the subscriber is active
                 if (recipient && subscriberDetails.status === 'active') {
-                    console.log("Broadcasting to " + recipient + " with state " + playerState);
+                    console.log("Broadcasting to " + recipient + " cards: " + playerState.holeCards);
 
                     if (publicKey == playerToActKey) {
-                        // It is this player's turn
+                        console.log(`Prompting ${playerToActKey} for action`);
                         
                         // Await their response
                         const response = await this.fxnClient.broadcastToSubscriber({
@@ -183,10 +183,11 @@ export class PokerManager {
                             playerState: playerState,
                             actionHistory: this.actionHistory
                         }, subscriberDetails);
-                        console.log("Response: " + response);
+                        console.log(response);
 
                         // Parse their chosen action
                         const responseData = await response.json();
+                        console.log(responseData);
                         const action = responseData.action;
                         const betSize = responseData.betSize;
 
@@ -199,13 +200,11 @@ export class PokerManager {
                         // Add it to the history
                         const bettingRound = this.tableState.roundOfBetting;
                         this.actionHistory.push([bettingRound, seatIndex, action, betSize]);
-
-                        return response;
                     } else {
                         // It is not this player's turn
 
-                        // Give them their update async
-                        return this.fxnClient.broadcastToSubscriber({
+                        // Give them their update
+                        await this.fxnClient.broadcastToSubscriber({
                             tableState: this.tableState,
                             playerState: playerState,
                             actionHistory: this.actionHistory
@@ -276,17 +275,17 @@ export class PokerManager {
     }
 
     private updateTableState() {
-        // Can get these any time
+        const handinProgress = this.table.isHandInProgress();
+        const bettingRoundInProgress = handinProgress ? this.table.isBettingRoundInProgress() : false;
+
         this.tableState.players = this.table.seats();
         this.tableState.numSeats = this.table.numSeats();
         this.tableState.emptySeats = this.getEmptySeats();
         this.tableState.forcedBets = this.table.forcedBets();
 
-        // We can only get these when the hand is in progress
-        const handinProgress = this.table.isHandInProgress();
         this.tableState.isHandInProgress = handinProgress;
 
-        this.tableState.playerToActSeat = handinProgress ? this.table.playerToAct() : null;
+        this.tableState.playerToActSeat = bettingRoundInProgress ? this.table.playerToAct() : null;
         this.tableState.button = handinProgress ? this.table.button() : null;
         this.tableState.isBettingRoundInProgress = handinProgress ? this.table.isBettingRoundInProgress() : null;
         this.tableState.roundOfBetting = handinProgress ? this.table.roundOfBetting() : null;
@@ -294,8 +293,6 @@ export class PokerManager {
         
         const bettingRoundsCompleted = handinProgress ? this.table.areBettingRoundsCompleted() : null;
         this.tableState.areBettingRoundsCompleted = bettingRoundsCompleted;
-        
-        console.log("Table state: " + this.tableState);
     }
 
     private addPlayer(publicKey: PublicKey, seatIndex: SeatIndex, buyIn: number)
@@ -312,7 +309,6 @@ export class PokerManager {
             if (seat == null)
                 emptySeats.push(index);
         });
-        console.log("Empty seats: " + emptySeats);
         return emptySeats;
     }
 
@@ -322,7 +318,6 @@ export class PokerManager {
             if (seat != null)
                 filledSeats.push(index);
         });
-        console.log("Filled seats: " + filledSeats);
         return filledSeats;
     }
 }
