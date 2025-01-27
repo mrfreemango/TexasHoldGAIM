@@ -1,14 +1,12 @@
+import { Table } from "poker-ts";
 import { FxnClient } from "./fxnClient.ts";
-import Table from "./poker-ts-main/src/lib/table.ts";
-import Action, { ActionRange }  from "./poker-ts-main/src/lib/dealer.ts";
-import Hand from "./poker-ts-main/src/lib/hand.ts";
-import Card from "./poker-ts-main/src/lib/card.ts";
-import CommunityCards, { RoundOfBetting } from "./poker-ts-main/src/lib/community-cards.ts";
+import Poker, { Action, Card } from "poker-ts/dist/facade/poker";
 
 declare type SeatIndex = number;
 declare type HoleCards = [Card, Card];
 declare type PublicKey = string;
 declare type BetSize = number | null;
+declare type RoundOfBetting = 'preflop' | 'flop' | 'turn' | 'river';
 declare type ActionHistoryEntry = [RoundOfBetting, SeatIndex, Action, BetSize];
 declare type ActionHistory = Array<ActionHistoryEntry>;
 
@@ -36,13 +34,13 @@ interface TableState {
     isBettingRoundInProgress: boolean,
     areBettingRoundsCompleted: boolean,
     roundOfBetting: RoundOfBetting,
-    communityCards: CommunityCards,
-    winners: [SeatIndex, Hand, HoleCards][][]
+    communityCards: Array<Card>,
+    winners: Array<SeatIndex>
 }
 
 // Stuff that should be kept secret from other players
 interface PlayerState {
-    legalActions: ActionRange,
+    legalActions: Array<Action>,
     holeCards: HoleCards
 }
 
@@ -52,7 +50,7 @@ const SMALL_BLIND: BetSize = 5;
 const MAX_PLAYERS: number = 9; // Max of 23 set by poker-ts
 
 export class PokerManager {
-    private table: Table
+    private table: Poker
     private tableState: TableState;
     private actionHistory: ActionHistory;
     private playerKeys: Map<SeatIndex, PublicKey>;
@@ -63,7 +61,32 @@ export class PokerManager {
 
     constructor(private fxnClient: FxnClient) {
         this.table = new Table({ante: ANTE, bigBlind: BIG_BLIND, smallBlind: SMALL_BLIND}, MAX_PLAYERS);
+        this.tableState = this.initializeTableState();
+        this.actionHistory = new Array<ActionHistoryEntry>();
+        this.playerKeys = new Map<SeatIndex, PublicKey>();
+        this.playerSeats = new Map<PublicKey, SeatIndex>();
         this.startNewGame();
+    }
+
+    private initializeTableState(): TableState {
+        return {
+            players: new Array<Player>(),
+            emptySeats: new Array<SeatIndex>(),
+            forcedBets: {
+                ante: -1,
+                bigBlind: -1,
+                smallBlind: -1
+            },
+            numSeats: -1,
+            isHandInProgress: false,
+            playerToActSeat: -1,
+            button: -1,
+            isBettingRoundInProgress: false,
+            areBettingRoundsCompleted: false,
+            roundOfBetting: "preflop",
+            communityCards: new Array<Card>(),
+            winners: new Array<SeatIndex>()
+        }
     }
 
     private async startNewGame(): Promise<void> {
@@ -204,20 +227,18 @@ export class PokerManager {
         const pots = this.table.pots();
         if (pots.length == 1 && pots[0].eligiblePlayers.length == 1) {
             const winnerSeatIndex = pots[0].eligiblePlayers[0];
-            const winnerHoleCards: Card[] = this.table.holeCards[winnerSeatIndex];
-            const communityCards = this.table.communityCards();
-            const winnerHand = Hand.create(winnerHoleCards, communityCards);
-            this.tableState.winners.push([winnerSeatIndex, { 
-                cards: winnerHoleCards,
-                ranking: winnerHand.ranking,
-                strength: winnerHand.strength
-            }, communityCards.cards()])
+            this.tableState.winners.push(winnerSeatIndex);
         }
 
         this.table.showdown();
         
         if (this.table.winners().length != 0) {
-            this.tableState.winners = this.table.winners();
+            this.table.winners().forEach((pot) => {
+                pot.forEach((winner) => {
+                    const seatIndex = winner[0];
+                    this.tableState.winners.push(seatIndex);
+                })
+            })
         }
         this.updateTableState();
 
@@ -249,7 +270,7 @@ export class PokerManager {
     private getPlayerState(publicKey: PublicKey): PlayerState {
         const seatIndex = this.playerSeats.get(publicKey)
         return {
-            legalActions: this.tableState.isBettingRoundInProgress ? this.table.legalActions() : null,
+            legalActions: this.tableState.isBettingRoundInProgress ? this.table.legalActions().actions : null,
             holeCards: this.table.holeCards[seatIndex]
         }
     }
@@ -262,16 +283,16 @@ export class PokerManager {
         this.tableState.forcedBets = this.table.forcedBets();
 
         // We can only get these when the hand is in progress
-        const handinProgress = this.table.handInProgress();
+        const handinProgress = this.table.isHandInProgress();
         this.tableState.isHandInProgress = handinProgress;
 
         this.tableState.playerToActSeat = handinProgress ? this.table.playerToAct() : null;
         this.tableState.button = handinProgress ? this.table.button() : null;
-        this.tableState.isBettingRoundInProgress = handinProgress ? this.table.bettingRoundInProgress() : null;
+        this.tableState.isBettingRoundInProgress = handinProgress ? this.table.isBettingRoundInProgress() : null;
         this.tableState.roundOfBetting = handinProgress ? this.table.roundOfBetting() : null;
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : null;
         
-        const bettingRoundsCompleted = handinProgress ? this.table.bettingRoundsCompleted() : null;
+        const bettingRoundsCompleted = handinProgress ? this.table.areBettingRoundsCompleted() : null;
         this.tableState.areBettingRoundsCompleted = bettingRoundsCompleted;
         
         console.log("Table state: " + this.tableState);
