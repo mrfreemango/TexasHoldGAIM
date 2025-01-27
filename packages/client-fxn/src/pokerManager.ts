@@ -9,6 +9,38 @@ declare type RoundOfBetting = 'preflop' | 'flop' | 'turn' | 'river';
 declare type ActionHistoryEntry = [RoundOfBetting, SeatIndex, Action, BetSize];
 declare type ActionHistory = Array<ActionHistoryEntry>;
 
+enum HandRanking {
+    HIGH_CARD = 0,
+    PAIR = 1,
+    TWO_PAIR = 2,
+    THREE_OF_A_KIND = 3,
+    STRAIGHT = 4,
+    FLUSH = 5,
+    FULL_HOUSE = 6,
+    FOUR_OF_A_KIND = 7,
+    STRAIGHT_FLUSH = 8,
+    ROYAL_FLUSH = 9
+}
+
+const HandRankingStr = [
+    "High Card",
+    "Pair",
+    "Two Pair",
+    "Three of a Kind",
+    "Straight",
+    "Flush",
+    "Full House",
+    "Four of a Kind",
+    "Straight Flush",
+    "Royal Flush"
+];
+
+interface Winner {
+    seatIndex: SeatIndex,
+    ranking: HandRanking,
+    winnings: number
+}
+
 interface Player {
     totalChips: number;
     stack: number;
@@ -35,7 +67,7 @@ interface TableState {
     areBettingRoundsCompleted: boolean,
     roundOfBetting: RoundOfBetting,
     communityCards: Array<Card>,
-    winners: Array<SeatIndex>
+    winners: Array<Winner>
 }
 
 // Stuff that should be kept secret from other players
@@ -87,7 +119,7 @@ export class PokerManager {
             areBettingRoundsCompleted: false,
             roundOfBetting: "preflop",
             communityCards: new Array<Card>(),
-            winners: new Array<SeatIndex>()
+            winners: new Array<Winner>()
         }
     }
 
@@ -154,6 +186,10 @@ export class PokerManager {
                 await this.BroadcastShowdown();
             }
         }
+
+        this.tableState.winners.forEach((winner) => {
+            console.log(`Seat ${winner.seatIndex} wins ${winner.winnings} with ${HandRankingStr[winner.ranking]}!`);
+        })
 
         console.log("Hand over! Starting next hand in 30s.");
         setTimeout(this.startNewHand, this.NEW_HAND_DELAY);
@@ -232,17 +268,29 @@ export class PokerManager {
         // If there is only one pot with one eligible player, they won't show up in winners() so add them here
         const pots = this.table.pots();
         if (pots.length == 1 && pots[0].eligiblePlayers.length == 1) {
-            const winnerSeatIndex = pots[0].eligiblePlayers[0];
-            this.tableState.winners.push(winnerSeatIndex);
+            const seatIndex = pots[0].eligiblePlayers[0];
+            const winnings = pots[0].size;
+            const winnerHand = this.playerStates[seatIndex].holeCards.concat(this.table.communityCards());
+            this.tableState.winners.push({
+                seatIndex: seatIndex,
+                ranking: this.getHandRanking(winnerHand),
+                winnings: winnings
+            });
         }
 
         this.table.showdown();
         
         if (this.table.winners().length != 0) {
-            this.table.winners().forEach((pot) => {
+            this.table.winners().forEach((pot, potIndex) => {
                 pot.forEach((winner) => {
                     const seatIndex = winner[0];
-                    this.tableState.winners.push(seatIndex);
+                    const winnings = pots[potIndex].size;
+                    const winnerHandRanking = winner[1].ranking;
+                    this.tableState.winners.push({
+                        seatIndex: seatIndex,
+                        ranking: winnerHandRanking,
+                        winnings: winnings
+                    });
                 })
             })
         }
@@ -326,5 +374,10 @@ export class PokerManager {
                 filledSeats.push(index);
         });
         return filledSeats;
+    }
+
+    private getHandRanking(cards: Card[]): HandRanking {
+        // TODO: calculate the hand ranking based on hole + community
+        return HandRanking.HIGH_CARD;
     }
 }
