@@ -80,7 +80,7 @@ export class FxnClientInterface {
 
                 // Send this player's guess back
                 res.json({
-                    action: "fold",
+                    action: "check",
                     betSize: 0
                 });
 
