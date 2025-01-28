@@ -227,26 +227,29 @@ export class PokerManager {
 
                     if (publicKey == playerToActKey) {
                         console.log(`Prompting ${playerToActKey} for action`);
-                        
-                        // Await their response
-                        const response = await this.fxnClient.broadcastToSubscriber({
-                            tableState: this.tableState,
-                            playerState: playerState,
-                            actionHistory: this.actionHistory
-                        }, subscriberDetails);
-                        console.log(response);
 
                         let action: Action = "fold";
                         let betSize = 0;
-                        if (response.status == 200) {
-                            // Parse their chosen action
-                            const responseData = await response.json();
-                            console.log(responseData);
-                            action = responseData.action;
-                            betSize = responseData.betSize;
+                        
+                        // Await their response
+                        await this.fxnClient.broadcastToSubscriber({
+                            tableState: this.tableState,
+                            playerState: playerState,
+                            actionHistory: this.actionHistory
+                        }, subscriberDetails).then(async (response) => {
+                            console.log(response);
+                            if (response.status == 200) {
+                                // Parse their chosen action
+                                const responseData = await response.json();
+                                console.log(responseData);
 
-                            // TODO: Validate
-                        }
+                                // TODO: Validate
+                                action = responseData.action;
+                                betSize = responseData.betSize;
+                            }
+                        }).catch((error) => {
+                            console.log("Error fetching action. Auto folding.", error);
+                        });
 
                         // Send the action to the table
                         console.log("Seat: " + seatIndex + " Action: " + action + " Bet: " + betSize);
@@ -263,7 +266,9 @@ export class PokerManager {
                             tableState: this.tableState,
                             playerState: playerState,
                             actionHistory: this.actionHistory
-                        }, subscriberDetails);
+                        }, subscriberDetails).catch((error) => {
+                            console.log("Error sending update to player.", error);
+                        });
                     }
                 }
             } catch (error) {
@@ -324,7 +329,9 @@ export class PokerManager {
                         tableState: this.tableState,
                         playerState: playerState,
                         actionHistory: this.actionHistory
-                    }, subscriberDetails);
+                    }, subscriberDetails).catch((error) => {
+                        console.log("Error sending showdown update to player.", error);
+                    });
                 }
             } catch (error) {
                 console.error(`Error communicating with subscriber:`, error);
