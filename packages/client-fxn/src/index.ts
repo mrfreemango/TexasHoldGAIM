@@ -89,8 +89,8 @@ export class FxnClientInterface {
                         betSize: 0
                     });
                 } else {
-                    // Return success (no content)
-                    return res.status(204);
+                    // Return success
+                    return res.status(200);
                 }
 
             } catch (error) {

@@ -236,13 +236,17 @@ export class PokerManager {
                         }, subscriberDetails);
                         console.log(response);
 
-                        // Parse their chosen action
-                        const responseData = await response.json();
-                        console.log(responseData);
-                        const action = responseData.action;
-                        const betSize = responseData.betSize;
+                        let action: Action = "fold";
+                        let betSize = 0;
+                        if (response.status == 200) {
+                            // Parse their chosen action
+                            const responseData = await response.json();
+                            console.log(responseData);
+                            action = responseData.action;
+                            betSize = responseData.betSize;
 
-                        // TODO: Validate
+                            // TODO: Validate
+                        }
 
                         // Send the action to the table
                         console.log("Seat: " + seatIndex + " Action: " + action + " Bet: " + betSize);
@@ -255,7 +259,7 @@ export class PokerManager {
                         // It is not this player's turn
 
                         // Give them their update
-                        await this.fxnClient.broadcastToSubscriber({
+                        this.fxnClient.broadcastToSubscriber({
                             tableState: this.tableState,
                             playerState: playerState,
                             actionHistory: this.actionHistory
@@ -316,7 +320,7 @@ export class PokerManager {
 
                 // Only broadcast if the subscriber is active
                 if (recipient && subscriberDetails.status === 'active') {
-                    return this.fxnClient.broadcastToSubscriber({
+                    this.fxnClient.broadcastToSubscriber({
                         tableState: this.tableState,
                         playerState: playerState,
                         actionHistory: this.actionHistory
