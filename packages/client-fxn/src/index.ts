@@ -84,10 +84,13 @@ export class FxnClientInterface {
                     // Determine an action to take and a bet size if applicable
 
                     // Include it in the response
-                    res.json({
+                    return res.json({
                         action: "check",
                         betSize: 0
                     });
+                } else {
+                    // Return success (no content)
+                    return res.status(204);
                 }
 
             } catch (error) {

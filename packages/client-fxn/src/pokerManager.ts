@@ -368,6 +368,10 @@ export class PokerManager {
         this.table.sitDown(seatIndex, buyIn);
         this.playerKeys.set(seatIndex, publicKey);
         this.playerSeats.set(publicKey, seatIndex);
+        this.playerStates[seatIndex] = {
+            holeCards: new Array<Card>(),
+            chips: -1
+        }
     }
 
     private getEmptySeats(): number[] {
