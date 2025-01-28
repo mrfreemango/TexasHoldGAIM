@@ -202,7 +202,7 @@ export class PokerManager {
         })
 
         console.log(`Hand over! Starting next hand in ${this.NEW_HAND_DELAY / 1000}s.`);
-        this.newHandTimer = setTimeout(this.table.startHand, this.NEW_HAND_DELAY);
+        this.newHandTimer = setTimeout(() => {this.startNewHand()}, this.NEW_HAND_DELAY);
     }
 
     private async BroadcastBettingRound() {
