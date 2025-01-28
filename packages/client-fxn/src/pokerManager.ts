@@ -90,8 +90,9 @@ export class PokerManager {
     private playerKeys: Map<SeatIndex, PublicKey>;
     private playerSeats: Map<PublicKey, SeatIndex>;
     public readonly TABLE_EMPTY_DELAY: number = 10 * 1000; // 30s delay
-    public readonly NEW_HAND_DELAY: number = 30 * 1000; // 30s delay
     private tableEmptyTimer: NodeJS.Timeout | null = null;
+    public readonly NEW_HAND_DELAY: number = 5 * 1000; // 5s delay
+    private newHandTimer: NodeJS.Timeout | null = null;
 
     constructor(private fxnClient: FxnClient) {
         this.table = new Table({ante: ANTE, bigBlind: BIG_BLIND, smallBlind: SMALL_BLIND}, MAX_PLAYERS);
@@ -164,6 +165,10 @@ export class PokerManager {
     }
 
     private async startNewHand(): Promise<void> {
+        if (this.newHandTimer) {
+            clearTimeout(this.newHandTimer);
+        }
+
         console.log("Starting new hand.");
         this.table.startHand();
         this.updateTableState();
@@ -196,8 +201,8 @@ export class PokerManager {
             console.log(`Seat ${winner.seatIndex} wins ${winner.winnings} with ${HandRankingStr[winner.ranking]}!`);
         })
 
-        console.log("Hand over! Starting next hand in 30s.");
-        setTimeout(this.startNewHand, this.NEW_HAND_DELAY);
+        console.log(`Hand over! Starting next hand in ${this.NEW_HAND_DELAY / 1000}s.`);
+        this.newHandTimer = setTimeout(this.table.startHand, this.NEW_HAND_DELAY);
     }
 
     private async BroadcastBettingRound() {
