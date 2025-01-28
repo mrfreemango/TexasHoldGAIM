@@ -144,12 +144,12 @@ export class PokerManager {
         this.tableState.emptySeats = this.getEmptySeats();
 
         if (this.tableState.emptySeats.length > 0) {
-            // We have empty seats, seat any subscribers
+            // We have empty seats, seat any alive subscribers
             
-            const subscribers = await this.fxnClient.getHostSubscribers();
-            subscribers.forEach((subscriberDetails) => {
+            const aliveSubscribers = await this.fxnClient.getAliveSubscribers();
+            aliveSubscribers.forEach((subscriberDetails) => {
                 const publicKey = subscriberDetails.subscriber.toString();
-                if (!this.playerSeats.get(publicKey)) {
+                if (!this.isSeated(publicKey)) {
                     const seatIndex = this.getEmptySeats().pop();
                     const buyIn = 300;
                     this.addPlayer(publicKey, seatIndex, buyIn);
@@ -164,7 +164,7 @@ export class PokerManager {
                 clearTimeout(this.tableEmptyTimer);
             }
 
-            console.log("Not enough players, trying again in " + this.TABLE_EMPTY_DELAY + " seconds.");
+            console.log(`Not enough players, trying again in ${this.TABLE_EMPTY_DELAY / 1000} seconds.`);
             this.tableEmptyTimer = setTimeout(() => this.startNewGame(), this.TABLE_EMPTY_DELAY);
         }
         else
@@ -367,7 +367,7 @@ export class PokerManager {
 
         this.tableState.emptySeats = this.getEmptySeats();
         this.tableState.button = handinProgress ? this.table.button() : null;
-
+        
         this.tableState.isHandInProgress = handinProgress;
         this.tableState.isBettingRoundInProgress = bettingRoundInProgress;
         this.tableState.areBettingRoundsCompleted = bettingRoundsCompleted;
@@ -377,7 +377,7 @@ export class PokerManager {
         this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : null,
         this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : null;
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : null;
-        
+
         // this.tableState.winners is updated in BroadcastShowdown when winners are determined
     }
 
