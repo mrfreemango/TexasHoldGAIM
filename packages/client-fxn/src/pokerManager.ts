@@ -8,7 +8,6 @@ declare type PublicKey = string;
 declare type BetSize = number;
 declare type RoundOfBetting = 'preflop' | 'flop' | 'turn' | 'river' | 'none';
 export declare type GameStateString = RoundOfBetting | "Between Hands" | "Pre-Game" | "Showdown";
-export declare type ActionHistoryEntry = [RoundOfBetting, SeatIndex, Action, BetSize];
 export declare type ActionHistory = Array<ActionHistoryEntry>;
 
 enum HandRanking {
@@ -36,6 +35,13 @@ const HandRankingStr = [
     "Straight Flush",
     "Royal Flush"
 ];
+
+export interface ActionHistoryEntry {
+    roundOfBetting: RoundOfBetting,
+    name: string,
+    action: Action,
+    betSize: BetSize
+};
 
 interface Winner {
     seatIndex: SeatIndex,
@@ -147,7 +153,7 @@ export class PokerManager {
 
     private async startNewGame(): Promise<void> {
         console.log("Starting a new game.");
-        this.actionHistory = new Array<[RoundOfBetting, SeatIndex, Action, BetSize]>();
+        this.actionHistory = new Array<ActionHistoryEntry>();
         this.tableState.emptySeats = this.getEmptySeats();
 
         if (this.tableState.emptySeats.length > 0) {
@@ -247,6 +253,7 @@ export class PokerManager {
     }
 
     private async BroadcastBettingRound() {
+        const roundOfBetting: RoundOfBetting = this.table.roundOfBetting();
         const playerToActSeat: SeatIndex = this.table.playerToAct();
         const playerToActKey: PublicKey = this.playerKeys.get(playerToActSeat);
 
@@ -298,8 +305,8 @@ export class PokerManager {
                         }
 
                         // Add it to the history
-                        const bettingRound = this.tableState.roundOfBetting;
-                        this.actionHistory.push([bettingRound, seatIndex, action, betSize]);
+                        const name = this.playerStates[seatIndex].name;
+                        this.actionHistory.push({roundOfBetting, name, action, betSize});
                     } else {
                         // It is not this player's turn
 
