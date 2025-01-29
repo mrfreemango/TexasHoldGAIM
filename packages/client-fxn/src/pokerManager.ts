@@ -96,6 +96,7 @@ export interface PlayerState {
     // Changes per-action
     stack: number,
     isFolded: boolean,
+    inPots: number[], // The index of the pots in table.pots() the player is playing for
 
     // Changes per-showdown
     isWinner: boolean
@@ -298,7 +299,7 @@ export class PokerManager {
 
                         // Send the action to the table
                         console.log("Seat: " + seatIndex + " Action: " + action + " Bet: " + betSize);
-                        this.table.actionTaken(action, betSize ? betSize : null);
+                        this.table.actionTaken(action, betSize > 0 ? betSize : null);
 
                         if (action == "fold") {
                             this.playerStates[seatIndex].isFolded = true;
@@ -437,6 +438,7 @@ export class PokerManager {
 
             stack: -1,
             isFolded: false,
+            inPots: new Array<number>(),
 
             isWinner: false
         }
@@ -453,12 +455,26 @@ export class PokerManager {
         return this.playerStates[seatIndex].name;
     }
 
+    private getPlayerPots(seatIndex: SeatIndex): number[] {
+        if (!this.table.isHandInProgress() || !this.table.isBettingRoundInProgress())
+            return [];
+
+        let inPots = [];
+        this.table.pots().forEach((pot, index) => {
+            if (pot.eligiblePlayers.includes(seatIndex))
+                inPots.push(index);
+        });
+
+        return inPots;
+    }
+
     private isSeated(publicKey: PublicKey): boolean {
         return this.playerSeats.get(publicKey) ? true : false;
     }
 
     private updatePlayerStates() {
         const handinProgress = this.table.isHandInProgress();
+        const bettingRoundInProgress = handinProgress ? this.table.isBettingRoundInProgress() : false;
         const bettingRoundsCompleted = handinProgress ? this.table.areBettingRoundsCompleted() : false;
 
         this.getFilledSeats().forEach((seatIndex) => {
@@ -466,6 +482,7 @@ export class PokerManager {
             this.playerStates[seatIndex].isDealer = handinProgress ? this.table.button() == seatIndex : false;
 
             this.playerStates[seatIndex].stack = this.table.seats()[seatIndex].stack;
+            this.playerStates[seatIndex].inPots = bettingRoundInProgress ? this.getPlayerPots(seatIndex) : [];
 
             // playerState.isFolded gets set in BroadcastBettingRound if they fold
             // playerState.isWinner gets set in BroadcastShowdown if they win
