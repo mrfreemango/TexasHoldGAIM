@@ -140,7 +140,8 @@ export class FxnClientInterface {
                             avatar: ""
                         }
                     }),
-                    gameState: tableState.gameStateString
+                    actionOn: tableState.playerToActSeat,
+                    gameState: tableState.gameStateString,
                 };
 
                 // Send the hard-coded game state as a JSON response

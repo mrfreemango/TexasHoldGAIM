@@ -195,6 +195,8 @@ export class PokerManager {
             playerState.isDealer = false;
         });
 
+        this.tableState.pots = [];
+        this.tableState.communityCards = [];
         this.tableState.winners = [];
 
         this.table.startHand();
