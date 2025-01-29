@@ -98,8 +98,10 @@ export class FxnClientInterface {
                     // console.log("Raw Output:", rawOutput);
 
                     const parsedOutput = JSON.parse(rawOutput);
-                    console.log("Parsed action:", parsedOutput.action);
-                    console.log("Parsed betSize:", parsedOutput.betSize);
+                    // console.log("Parsed action:", parsedOutput.action);
+                    // console.log("Parsed betSize:", parsedOutput.betSize);
+
+                    console.log("Explanation:", parsedOutput.explanation);
 
                     // Include it in the response
                     return res.json({
