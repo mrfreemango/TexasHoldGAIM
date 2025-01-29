@@ -209,7 +209,7 @@ export class PokerManager {
 
         // Reset action history
         this.actionHistory = new Array<ActionHistoryEntry>();
-        
+
         // Reset player states for new hand
         this.getFilledSeats().forEach((seatIndex) => {
             this.playerStates[seatIndex].isFolded = false;
@@ -260,13 +260,14 @@ export class PokerManager {
             }
         } else {
             this.tableState.winners.forEach((winner) => {
-                console.log(`Seat ${winner.seatIndex} wins ${winner.winnings} with ${HandRankingStr[winner.ranking]}!`);
+                console.log(`${this.playerStates[winner.seatIndex].name} wins ${winner.winnings} with a ${HandRankingStr[winner.ranking]}!`);
             })
     
             console.log(`Hand over! Starting next hand in ${this.NEW_HAND_DELAY / 1000}s.`);
             this.newHandTimer = setTimeout(() => {this.startNewHand()}, this.NEW_HAND_DELAY);
         }
 
+        console.log(`Broadcasting again in ${this.BROADCAST_DELAY / 1000} seconds.`);
         this.broadcastTimer = setTimeout(() => {this.BroadcastHand()}, this.BROADCAST_DELAY);
     }
 
@@ -329,7 +330,7 @@ export class PokerManager {
                         // It is not this player's turn
 
                         // Give them their update
-                        this.fxnClient.broadcastToSubscriber({
+                        return this.fxnClient.broadcastToSubscriber({
                             tableState: this.tableState,
                             playerState: playerState,
                             actionHistory: this.actionHistory
@@ -343,7 +344,7 @@ export class PokerManager {
             }
         });
 
-        await Promise.all(promises);
+        await Promise.allSettled(promises);
     }
 
     private async BroadcastShowdown() {
@@ -397,7 +398,7 @@ export class PokerManager {
 
                 // Only broadcast if the subscriber is active
                 if (recipient && subscriberDetails.status === 'active') {
-                    this.fxnClient.broadcastToSubscriber({
+                    return this.fxnClient.broadcastToSubscriber({
                         tableState: this.tableState,
                         playerState: playerState,
                         actionHistory: this.actionHistory
@@ -410,7 +411,7 @@ export class PokerManager {
             }
         });
 
-        return Promise.all(promises);
+        await Promise.allSettled(promises);
     }
 
     private updateTableState() {
