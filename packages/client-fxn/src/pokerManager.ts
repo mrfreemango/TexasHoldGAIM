@@ -7,6 +7,7 @@ declare type SeatIndex = number;
 declare type PublicKey = string;
 declare type BetSize = number;
 declare type RoundOfBetting = 'preflop' | 'flop' | 'turn' | 'river' | 'none';
+export declare type GameStateString = RoundOfBetting | "Between Hands" | "Pre-Game" | "Showdown";
 export declare type ActionHistoryEntry = [RoundOfBetting, SeatIndex, Action, BetSize];
 export declare type ActionHistory = Array<ActionHistoryEntry>;
 
@@ -68,6 +69,7 @@ export interface TableState {
     playerToActLegalActions: Array<Action>,
     pots: Array<number>, // The size of each pot
     communityCards: Array<Card>,
+    gameStateString: GameStateString,
 
     // Changes per-showdown
     winners: Array<Winner>
@@ -136,6 +138,7 @@ export class PokerManager {
             areBettingRoundsCompleted: false,
             roundOfBetting: "none",
             communityCards: new Array<Card>(),
+            gameStateString: "Pre-Game",
             winners: new Array<Winner>()
         }
     }
@@ -387,6 +390,7 @@ export class PokerManager {
         this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : null,
         this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : null;
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : null;
+        this.tableState.gameStateString = handinProgress ? (bettingRoundInProgress ? this.tableState.roundOfBetting : "Showdown") : "Between Hands";
 
         // this.tableState.winners is updated in BroadcastShowdown when winners are determined
     }
