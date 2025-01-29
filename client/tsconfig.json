@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",                // Ensure you're targeting modern JavaScript
+      "module": "ESNext",               // For module resolution
+      "lib": ["DOM", "ESNext"],         // Include DOM types for React
+      "jsx": "react-jsx",               // Use React's new JSX transform
+      "moduleResolution": "node",       // Resolve modules like Node.js
+      "strict": false,                   // Enable strict type checking
+      "esModuleInterop": true,          // Enable interop for CommonJS modules
+      "forceConsistentCasingInFileNames": true,
+      "skipLibCheck": true              // Skip library checking for faster compilation
+    },
+    "include": ["src/**/*"],            // Include your source files
+    "exclude": ["node_modules"]         // Exclude node_modules
+  }
+  

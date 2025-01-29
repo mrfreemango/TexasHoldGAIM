@@ -34,6 +34,7 @@
         "node": ">=22"
     },
     "dependencies": {
+        "cors": "^2.8.5",
         "ollama-ai-provider": "^0.16.1",
         "optional": "^0.1.4",
         "sharp": "^0.33.5"
