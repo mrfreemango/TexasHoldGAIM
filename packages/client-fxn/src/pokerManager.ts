@@ -160,7 +160,7 @@ export class PokerManager {
                 if (!this.isSeated(publicKey)) {
                     const seatIndex = this.getEmptySeats().pop();
                     const buyIn = 300;
-                    this.addPlayer(publicKey, seatIndex, buyIn, subscriberDetails.subscription.recipient);
+                    this.addPlayer(publicKey, seatIndex, buyIn, publicKey);
                     console.log(`Seated ${publicKey} at chair ${seatIndex} with ${buyIn} chips.`);
                 }
             });
