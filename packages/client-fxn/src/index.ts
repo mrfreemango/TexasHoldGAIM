@@ -123,7 +123,7 @@ export class FxnClientInterface {
     private setupHostRoutes() {
         this.app.get('/current-game-state', async (req, res) => {
             const tableState = this.gameManager.getTableState();
-            const playerStates = this.gameManager.getPlayerStates();
+            const playerStates = this.gameManager.getSeatedPlayerStates();
             try {
                 const currentGameState = {
                     potSize: tableState.pots,

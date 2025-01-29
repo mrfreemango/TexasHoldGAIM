@@ -191,10 +191,10 @@ export class PokerManager {
         console.log("Starting new hand.");
 
         // Reset player states for new hand
-        this.playerStates.forEach((playerState) => {
-            playerState.isFolded = false;
-            playerState.isDealer = false;
-            playerState.isDealer = false;
+        this.getFilledSeats().forEach((seatIndex) => {
+            this.playerStates[seatIndex].isFolded = false;
+            this.playerStates[seatIndex].isDealer = false;
+            this.playerStates[seatIndex].isDealer = false;
         });
 
         this.tableState.pots = [];
@@ -204,8 +204,8 @@ export class PokerManager {
         this.table.startHand();
         this.updateTableState();
         this.updatePlayerStates();
-        const playerStates = this.getPlayerStates();
-        playerStates.forEach((playerState) => {
+        this.getFilledSeats().forEach((seatIndex) => {
+            const playerState = this.playerStates[seatIndex];
             const cards = playerState.holeCards;
             const cardsString = `${cards[0].rank} of ${cards[0].suit} and ${cards[1].rank} of ${cards[1].suit}`;
             console.log(`Dealt ${cardsString} to ${playerState.name}`);
@@ -443,11 +443,7 @@ export class PokerManager {
     }
 
     private getPlayerName(seatIndex: SeatIndex): string {
-        const player = this.playerStates.find((playerState) => {playerState.seat == seatIndex});
-        if (player)
-            return player.name;
-
-        return "";
+        return this.playerStates[seatIndex].name;
     }
 
     private isSeated(publicKey: PublicKey): boolean {
@@ -458,21 +454,21 @@ export class PokerManager {
         const handinProgress = this.table.isHandInProgress();
         const bettingRoundsCompleted = handinProgress ? this.table.areBettingRoundsCompleted() : false;
 
-        this.playerStates.forEach((playerState) => {
-            const seatIndex = playerState.seat;
+        this.getFilledSeats().forEach((seatIndex) => {
+            this.playerStates[seatIndex].holeCards = (handinProgress || bettingRoundsCompleted) ? this.table.holeCards()[seatIndex] : [];
+            this.playerStates[seatIndex].isDealer = handinProgress ? this.table.button() == seatIndex : false;
 
-            playerState.holeCards = (handinProgress || bettingRoundsCompleted) ? this.table.holeCards()[seatIndex] : [];
-            playerState.isDealer = handinProgress ? this.table.button() == seatIndex : false;
-
-            playerState.stack = this.table.seats()[seatIndex].stack;
+            this.playerStates[seatIndex].stack = this.table.seats()[seatIndex].stack;
 
             // playerState.isFolded gets set in BroadcastBettingRound if they fold
             // playerState.isWinner gets set in BroadcastShowdown if they win
         });
     }
 
-    public getPlayerStates(): Array<PlayerState> {
-        return this.playerStates;
+    public getSeatedPlayerStates(): Array<PlayerState> {
+        return this.getFilledSeats().map((seatIndex) => {
+            return this.playerStates[seatIndex];
+        });
     }
 
     private getEmptySeats(): number[] {
