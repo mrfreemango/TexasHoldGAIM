@@ -61,13 +61,6 @@ export class FxnClientInterface {
             try {
                 const { publicKey, signature, payload } = req.body;
 
-                // Add debug logging
-                console.log('Received POST request:', {
-                    path: req.path,
-                    body: req.body,
-                    headers: req.headers
-                });
-
                 // Get the game master's public key
                 const gameMasterKey = this.runtime.getSetting("GAIM_HOST_PUBLIC_KEY");
 
@@ -122,8 +115,6 @@ export class FxnClientInterface {
                 });
             }
         };
-
-        
 
         // Register the handler for both paths
         this.app.post('/', handleRequest);
