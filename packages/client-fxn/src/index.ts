@@ -3,7 +3,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors'; // Import cors
 import {IAgentRuntime} from '@ai16z/eliza/src/types.ts';
-import { ActionHistory, PlayerState, PokerManager, TableState } from './pokerManager.ts';
+import { ActionHistory, ActionHistoryEntry, PlayerState, PokerManager, TableState } from './pokerManager.ts';
 import {FxnClient} from "./fxnClient.ts";
 import {verifyMessage} from "./utils/signingUtils.ts";
 
@@ -93,6 +93,8 @@ export class FxnClientInterface {
                     // It is this player's turn
 
                     // Determine an action to take and a bet size if applicable
+                    const prompt = this.generatePokerPrompt(tableState, playerState, actionHistory);
+                    console.log(prompt);
 
                     // Include it in the response
                     return res.json({
@@ -154,33 +156,67 @@ export class FxnClientInterface {
     }
 
     private generatePokerPrompt(tableState: TableState, playerState: PlayerState, actionHistory: ActionHistory): string {
-        return `
-            You are a poker agent playing Texas Hold'em.
+        
+        const formatCards = (cards: {rank: string, suit: string}[]): string => {
+            const cardStrings = cards.map((card) => {
+                return `${card.rank} of ${card.suit}`;
+            });
 
-            Assess the current situation and decide what kind of bet to make.
+            return cardStrings.join(", ");
+        }
+
+        const formatActionHistory = (actionHistory: ActionHistory): string => {
+            const actionStrings = actionHistory.map((entry: ActionHistoryEntry) => {
+                const actionString = entry.action != "bet" ? entry.action + "ed" : entry.action;
+                const betString = entry.action == "bet" || entry.action == "raise" ? ` ${entry.betSize} dollars.` : "";
+                return `During the ${entry.roundOfBetting}, ${entry.name} ${actionString}${betString}`;
+            });
+
+            return actionStrings.join(", ");
+        }
+
+        // Sum all the pots this player is eligible for
+        const totalEligiblePotSize = tableState.pots.reduce((acc, cur) => {return acc + cur}, 0);
+
+        const legalActions = tableState.playerToActLegalActions;
+        
+        return `
+            Your name is ${playerState.name}, and you are a poker agent playing Texas Hold'em.
+
+            Assess the current situation and decide what kind of action to take.
+            If applicable, also decide the size of bet to make.
 
             Your current properties are:
-            - Chips: {chips}
-            - Hand: {hand}
+            - Chips: ${playerState.stack}
+            - Hand: [${formatCards(playerState.holeCards)}]
 
-            Take into account the community cards and the current bet value to make your decision:
-            - Community Cards: {community_cards}
-            - Current Bet: {current_bet}
+            Take into account the community cards and the current pot size to make your decision.
+            - Community Cards: [${tableState.communityCards}]
+            - Current Pot Size: ${totalEligiblePotSize}
 
-            Review the bet history and opponent behavior to make your decision:
-            - Bet History: {bet_history}
+            Review the action history and opponent behavior to inform your decision:
+            - Action History: [${formatActionHistory(actionHistory)}]
 
-            Based on this information, decide your next move. Your options are:
-            - Fold: If your hand is weak and opponents show strength.
-            - Call: If the bet value is reasonable and your hand has potential.
-            - Raise: If your hand is strong and you want to increase the pot size or bluff.
-            - Check: If no bet is required and you want to see the next card for free.
+            If there is no entries in the Action History, you are the first player to act in this round,
 
-            You must have enough chips to call or raise.
+            The basic strategy behind each type of action is as follows:
+            - Fold: If your hand is weak and opponents show strength. Does not require a bet size.
+            - Call: If the bet value is reasonable and your hand has potential. Does not require a bet size.
+            - Raise: If your hand is strong and you want to increase the pot size or bluff. Requires a bet size.
+            - Bet: The same as Raise, but is only available if you have not Bet yet this hand. Requires a bet size.
+            - Check: If no bet is required and you want to see the next card for free. Does not require a bet size.
+
+            Based on this information, decide your next move. You may choose one of the following legal actions: [${legalActions.actions.join(", ")}]
+            ${legalActions.chipRange ? `If you choose an action that requires a bet size, it must be a minimum of ${legalActions.chipRange.min}  dollars and a maximum of ${legalActions.chipRange.max} dollars.` : ``}
 
             Make a decision now and provide a brief explanation for your choice.
 
-            Format Instructions: {format_instructions}
+            Format Instructions:
+            The output should be a TypeScript code snippet of an Object that conforms to the following interface:
+            interface Output {
+                action: 'fold' | 'check' | 'call' | 'bet' | 'raise', // Your chosen action, selected from the legal actions listed above
+                betSize?: number // The bet size you have chosen, if your chosen action requires a bet size
+            }
         `;
     }
 
