@@ -7,23 +7,58 @@
     align-items: center;
   }
   
-  /* Button container */
-  .button-container {
-    left: 2%;
-    top: 2%;
+  .game-info {
+    left: 1%;
+    top: 1%;
     position: absolute;
-    margin-bottom: 20px;
+    background-color: black;
+    color: white;
+    width: 25%;
+    border: 1px white solid;
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 8px; 
   }
   
-  .button-container button {
-    padding: 10px 16px;
-    font-size: 1rem;
-    cursor: pointer;
+  .pot-sizes-section,
+  .action-on-section {
+    flex: 1; /* Distribute available space equally */
+    margin: 0 10px; /* Horizontal spacing between sections */
   }
   
+  .pot-sizes-list {
+    list-style-type: none; /* Remove default bullets */
+    padding: 0;
+    margin: 0;
+  }
+  
+  .pot-sizes-list .pot-size {
+    border-radius: 4px;
+    font-weight: bold;
+  }
+  
+  .pot-size {
+    font-weight: bold;
+    color: gold;
+  }
+  
+
+  /* Responsive Design: Adjust layout for smaller screens */
+  @media (max-width: 780px) {
+    .game-info {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .pot-sizes-section,
+    .action-on-section {
+      margin: 5px 0;
+    }
+  }
   /* Table with brown border and green center */
   .table {
     width: 100%;

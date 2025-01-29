@@ -122,7 +122,7 @@ export class FxnClientInterface {
         this.app.get('/current-game-state', async (req, res) => {
             try {
                 const hardCodedGameState = {
-                    potSize: 20,
+                    potSize: [20, 50],
                     communityCards: [
                         { rank: 'A', suit: '♠' },
                         { rank: 'K', suit: '♠' },
@@ -181,6 +181,7 @@ export class FxnClientInterface {
                         },
                         // Add more players as needed
                     ],
+                    gameState: "dealCards"
                 };
 
                 // Send the hard-coded game state as a JSON response

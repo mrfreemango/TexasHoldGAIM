@@ -21,7 +21,7 @@ interface Player {
 }
 
 interface GameState {
-  potSize: number;
+  potSize: number[];
   communityCards: Card[];
   players: Player[];
   actionOn: string | null;
@@ -30,7 +30,7 @@ interface GameState {
 
 function PokerGame() {
   const [gameState, setGameState] = useState<GameState>({
-    potSize: 0,
+    potSize: [],
     communityCards: [],
     players: [],
     actionOn: null,
@@ -163,12 +163,39 @@ function PokerGame() {
   return (
     <div className="poker-game-container">
       <div className="game-info">
-        <div className="pot-size">Pot Size: ${gameState.potSize}</div>
-        {gameState.actionOn && (
-          <div className="action-on">
-            Action on: {gameState.players.find(p => p.id === gameState.actionOn)?.name || gameState.actionOn}
+        {/* Pot Sizes Section */}
+        <div className="pot-sizes-section">
+            {Array.isArray(gameState.potSize) && gameState.potSize.length > 1 ? (
+              // If there are multiple pot sizes, display them in a list
+              <div>
+                <strong>Pot Sizes:</strong>
+                <ul className="pot-sizes-list">
+                  {gameState.potSize.map((pot, index) => (
+                    <li key={index} className="pot-size">
+                      ${pot}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : gameState.potSize.length === 1 ? (
+              // If there's only one pot size, display it normally
+              <div>
+                <strong>Pot Size: <span className="pot-size">${gameState.potSize[0]}</span></strong>
+              </div>
+            ) : (
+              // Optional: Handle cases where potSize.length === 0
+              <div>
+                <strong>Pot Size: <span className="pot-size">0</span></strong>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Action On Section */}
+          <div className="action-on-section">
+              <div className="action-on">
+                <strong>Action on: <span>{ gameState.actionOn && (gameState.players.find(p => p.id === gameState.actionOn)?.name || gameState.actionOn)}</span></strong>
+              </div>
+          </div>
       </div>
       <div className="table-container">
         <div className="table">
