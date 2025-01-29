@@ -197,16 +197,21 @@ export class PokerManager {
 
         console.log("Starting new hand.");
 
+        // TODO: Check for new players to sit, or busted players that stood
+
         // Reset player states for new hand
         this.getFilledSeats().forEach((seatIndex) => {
             this.playerStates[seatIndex].isFolded = false;
             this.playerStates[seatIndex].isDealer = false;
-            this.playerStates[seatIndex].isWinner= false;
+            this.playerStates[seatIndex].isWinner = false;
+            this.playerStates[seatIndex].inPots = [];
         });
 
+        // Reset table state for new hand
         this.tableState.pots = [];
         this.tableState.communityCards = [];
         this.tableState.winners = [];
+        this.tableState.playerToActLegalActions = [];
 
         this.table.startHand();
         this.updateTableState();
@@ -411,9 +416,9 @@ export class PokerManager {
         this.tableState.playerToActSeat = bettingRoundInProgress ? this.table.playerToAct() : this.tableState.playerToActSeat;
         this.tableState.playerToActKey = bettingRoundInProgress ? this.playerKeys.get(this.tableState.playerToActSeat) : this.tableState.playerToActKey;
         this.tableState.playerToActName = this.getPlayerName(this.tableState.playerToActSeat);
-        this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : [],
-        this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : [];
-        this.tableState.communityCards = handinProgress ? this.table.communityCards() : [];
+        this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : this.tableState.playerToActLegalActions,
+        this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : this.tableState.pots;
+        this.tableState.communityCards = handinProgress ? this.table.communityCards() : this.tableState.communityCards;
         this.tableState.gameStateString = handinProgress ? (bettingRoundInProgress ? this.tableState.roundOfBetting : (bettingRoundsCompleted ? "Showdown" : this.tableState.roundOfBetting)) : "Between Hands";
 
         // this.tableState.winners is updated in BroadcastShowdown when winners are determined
