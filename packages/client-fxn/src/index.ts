@@ -85,6 +85,9 @@ export class FxnClientInterface {
 
                 if (tableState.playerToActKey == this.runtime.getSetting("WALLET_PUBLIC_KEY")) {
                     // It is this player's turn
+                    const legalActions = tableState.playerToActLegalActions;
+                    console.log("Legal Actions:", legalActions.actions.toString());
+                    console.log(`Bet Range: ${legalActions.chipRange?.min} -> ${legalActions.chipRange.max}\n`);
 
                     // Determine an action to take and a bet size if applicable
                     const prompt = this.generatePokerPrompt(tableState, playerState, actionHistory);
@@ -95,13 +98,10 @@ export class FxnClientInterface {
                         stop: null
                     });
 
-                    // console.log("Raw Output:", rawOutput);
-
                     const parsedOutput = JSON.parse(rawOutput);
-                    // console.log("Parsed action:", parsedOutput.action);
-                    // console.log("Parsed betSize:", parsedOutput.betSize);
-
-                    console.log("Explanation:", parsedOutput.explanation);
+                    console.log("Parsed action:", parsedOutput.action);
+                    console.log("Parsed betSize:", parsedOutput.betSize);
+                    console.log(`Explanation:\n${parsedOutput.explanation}\n`);
 
                     // Include it in the response
                     return res.json({
