@@ -22,8 +22,10 @@ export class FxnClientInterface {
         }
     }
 
-    private setupGame(role: string) {
+    private async setupGame(role: string) {
         this.fxnClient = new FxnClient({ runtime: this.runtime });
+        await this.fxnClient.initialize();
+        
         if (role === 'PLAYER') {
             this.setupRoutes();
         }
@@ -37,7 +39,7 @@ export class FxnClientInterface {
         });
     }
 
-    private async setupGameLoop() {
+    private setupGameLoop() {
         this.gameManager = new PokerManager(this.fxnClient);
     }
 
@@ -214,7 +216,7 @@ export class FxnClientInterface {
     }
 
     static async start(runtime: IAgentRuntime) {
-        console.log('Starting FXN Client');
+        console.log('Starting FXN Client Interface');
         return new FxnClientInterface(runtime);
     }
 

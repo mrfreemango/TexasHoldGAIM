@@ -35,10 +35,9 @@ export class FxnClient extends EventEmitter {
         const provider = this.createAnchorProvider();
         this.solanaAdapter = new SolanaAdapter(provider);
         this.hostPublicKey = new PublicKey(this.runtime.getSetting("GAIM_HOST_PUBLIC_KEY"));
-        this.initialize();
     }
 
-    private async initialize() {
+    public async initialize() {
         const role = this.runtime.getSetting("GAIM_ROLE");
         if (role == "HOST") {
             await this.initializeHost();
@@ -59,14 +58,10 @@ export class FxnClient extends EventEmitter {
         }
 
         console.log("Found gamemaster: " + hostDetails.name);
-        console.log("Current Subscribers:");
-        const hostSubscribers = await this.getHostSubscribers();
-        console.log(hostSubscribers);
 
         // Subscribe to the host or renew our subscription
         const subscriptions = await this.getSubscriptions();
         const subscribed = subscriptions.find((subscription) => {
-            console.log(subscription.dataProvider.toString() == this.hostPublicKey.toString());
             return subscription.dataProvider.toString() == this.hostPublicKey.toString();
         });
 
@@ -75,7 +70,6 @@ export class FxnClient extends EventEmitter {
             await this.subscribeToHost();
         } else {
             console.log("Already subscribed to host.");
-            console.log(subscribed);
         }
     }
 
@@ -131,8 +125,6 @@ export class FxnClient extends EventEmitter {
 
     public async subscribeToHost(): Promise<TransactionSignature> {
         const hostParams = await this.getHostParams();
-        console.log("Host Params:");
-        console.log(hostParams);
         if (hostParams.restrict_subscriptions) {
             // Request a subscription
             const subscriptionSig =  await this.solanaAdapter.requestSubscription({dataProvider: this.hostPublicKey});
@@ -184,23 +176,17 @@ export class FxnClient extends EventEmitter {
         if (!recipient)
             return false;
 
-        let alive = true;
-        await fetch(recipient).catch((_error) => {
-            console.log(`Subscriber endpoint ${recipient} is not alive.`);
-            alive = false;
+        // ping endpoint for a response
+        const alive = fetch(recipient).then((_response) => {
+            return true;
+        }).catch((_error) => {
+            return false;
         });
 
         return alive;
     }
 
-    /**
-     * todo configure the content format
-     * @param content
-     * @param subscribers
-     * @protected
-     */
-    public async broadcastToSubscribers(content: any, subscribers: Array<any>) {
-        // console.log('Gonna broadcast - subscribers are ', subscribers);
+    public async broadcastToSubscribers(content: Object, subscribers: Array<SubscriberDetails>) {
         const promises = subscribers.map(async (subscriber) => {
             try {
                 const privateKey = this.runtime.getSetting("WALLET_PRIVATE_KEY")!;
@@ -231,7 +217,7 @@ export class FxnClient extends EventEmitter {
     }
 
     // Only broadcast to a specific subscriber
-    public async broadcastToSubscriber(content: any, subscriber: SubscriberDetails) {
+    public async broadcastToSubscriber(content: Object, subscriber: SubscriberDetails) {
         try {
             const privateKey = this.runtime.getSetting("WALLET_PRIVATE_KEY")!;
             const privateKeyUint8Array = bs58.decode(privateKey);
@@ -259,42 +245,45 @@ export class FxnClient extends EventEmitter {
 
     public async getSubscribers(): Promise<SubscriberDetails[]> {
         const agentId = new PublicKey(this.runtime.getSetting("WALLET_PUBLIC_KEY"));
-        try {
-            return await this.solanaAdapter.getSubscriptionsForProvider(agentId);
-        } catch (error) {
-            console.log("No subscribers found!");
-            return [];
-        }
+        return await this.solanaAdapter.getSubscriptionsForProvider(agentId)
+            .catch((error) => {
+                console.error("Error getting subscribers:", error);
+                return [];
+            });
     }
 
     public async getAliveSubscribers(): Promise<SubscriberDetails[]> {
         const subscribers = await this.getSubscribers();
+
+        // Map first then filter because of async shenanigans
         const promises = subscribers.map(async (subscriber) => {
-            const isAlive = await this.isSubscriberAlive(subscriber);
-            if(isAlive)
+            const alive = await this.isSubscriberAlive(subscriber);
+            if (alive)
                 return subscriber;
         });
 
-        return Promise.all(promises);
+        // Unresponsive subscribers will be undefined
+        const mapResult = await Promise.all(promises);
+
+        // Return with undefined filtered out
+        return mapResult.filter(val => val !== undefined);
     }
 
     public async getHostSubscribers(): Promise<SubscriberDetails[]> {
-        try {
-            return await this.solanaAdapter.getSubscriptionsForProvider(this.hostPublicKey);
-        } catch (error) {
-            console.log("No subscribers found!");
-            return [];
-        }
+        return await this.solanaAdapter.getSubscriptionsForProvider(this.hostPublicKey)
+            .catch((error) => {
+                console.error("Error getting host subscribers:", error);
+                return [];
+            });
     }
 
     public async getSubscriptions(): Promise<SubscriptionDetails[]> {
         const agentId = new PublicKey(this.runtime.getSetting("WALLET_PUBLIC_KEY"));
-        try {
-            return await this.solanaAdapter.getAllSubscriptionsForUser(agentId);
-        } catch (error) {
-            console.log("No subscriptions found!");
-            return [];
-        }
+        return await this.solanaAdapter.getAllSubscriptionsForUser(agentId)
+            .catch((error) => {
+                console.error("Error getting subscriptions:", error);
+                return [];
+            });
     }
 
     /**

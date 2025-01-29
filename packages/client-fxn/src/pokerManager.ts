@@ -145,8 +145,9 @@ export class PokerManager {
 
         if (this.tableState.emptySeats.length > 0) {
             // We have empty seats, seat any alive subscribers
-            
+
             const aliveSubscribers = await this.fxnClient.getAliveSubscribers();
+            console.log(`Found ${aliveSubscribers.length} live subscribers.`);
             aliveSubscribers.forEach((subscriberDetails) => {
                 const publicKey = subscriberDetails.subscriber.toString();
                 if (!this.isSeated(publicKey)) {
@@ -219,10 +220,10 @@ export class PokerManager {
         const playerToActSeat: SeatIndex = this.table.playerToAct();
         const playerToActKey: PublicKey = this.playerKeys.get(playerToActSeat);
 
-        const subscribers = await this.fxnClient.getSubscribers();
+        const aliveSubscribers = await this.fxnClient.getAliveSubscribers();
 
-        // Broadcast to all subscribers
-        const promises = subscribers.map(async (subscriberDetails) => {
+        // Broadcast to alive subscribers
+        const promises = aliveSubscribers.map(async (subscriberDetails) => {
             try {
                 const publicKey = subscriberDetails.subscriber.toString();
                 const seatIndex = this.getSeatIndex(publicKey);
@@ -247,10 +248,10 @@ export class PokerManager {
                             playerState: playerState,
                             actionHistory: this.actionHistory
                         }, subscriberDetails).then(async (response) => {
-                            console.log(response);
-                            if (response.status == 200) {
+                            if (response.ok) {
                                 // Parse their chosen action
                                 const responseData = await response.json();
+                                console.log(`Parsed response from player:`);
                                 console.log(responseData);
 
                                 // TODO: Validate
@@ -258,7 +259,7 @@ export class PokerManager {
                                 betSize = responseData.betSize;
                             }
                         }).catch((error) => {
-                            console.log("Error fetching action. Auto folding.", error);
+                            console.log(`Error fetching action from ${recipient}. Auto folding.`, error);
                         });
 
                         // Send the action to the table
@@ -332,10 +333,10 @@ export class PokerManager {
         this.updateTableState();
         this.updatePlayerStates();
 
-        const subscribers = await this.fxnClient.getSubscribers();
+        const aliveSubscribers = await this.fxnClient.getAliveSubscribers();
 
-        // Broadcast to all subscribers
-        const promises = subscribers.map(async (subscriberDetails) => {
+        // Broadcast to alive subscribers
+        const promises = aliveSubscribers.map(async (subscriberDetails) => {
             try {
                 const publicKey = subscriberDetails.subscriber.toString();
                 const seatIndex = this.playerSeats.get(publicKey);
@@ -349,11 +350,11 @@ export class PokerManager {
                         playerState: playerState,
                         actionHistory: this.actionHistory
                     }, subscriberDetails).catch((error) => {
-                        console.log("Error sending showdown update to player.", error);
+                        console.log(`Error sending showdown update to player ${recipient}.`, error);
                     });
                 }
             } catch (error) {
-                console.error(`Error communicating with subscriber:`, error);
+                console.error(`Error communicating with subscriber ${subscriberDetails.subscription?.recipient}:`, error);
             }
         });
 
