@@ -443,7 +443,7 @@ export class PokerManager {
     }
 
     private getPlayerName(seatIndex: SeatIndex): string {
-        const player = this.playerStates.find((playerState) => {playerState.seat == this.tableState.playerToActSeat});
+        const player = this.playerStates.find((playerState) => {playerState.seat == seatIndex});
         if (player)
             return player.name;
 
