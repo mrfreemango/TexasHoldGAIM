@@ -219,9 +219,9 @@ export class PokerManager {
             clearTimeout(this.broadcastTimer);
         }
 
-        if (this.tableState.isHandInProgress) {
-            if (this.tableState.isBettingRoundInProgress) {
-                console.log("Betting round:", this.tableState.roundOfBetting);
+        if (this.table.isHandInProgress()) {
+            if (this.table.isBettingRoundInProgress()) {
+                console.log("Betting round:", this.table.roundOfBetting());
                 await this.BroadcastBettingRound();
                 this.updateTableState();
                 this.updatePlayerStates();
@@ -230,7 +230,7 @@ export class PokerManager {
                 this.table.endBettingRound();
                 this.updateTableState();
 
-                if (this.tableState.areBettingRoundsCompleted) {
+                if (this.table.areBettingRoundsCompleted()) {
                     await this.BroadcastShowdown();
                 }
             }
