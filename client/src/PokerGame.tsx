@@ -20,30 +20,22 @@ interface Player {
   avatar: string;
 }
 
+enum GameStage {
+  PreFlop = 'preflop',
+  Flop = 'flop',
+  Turn = 'turn',
+  River = 'river',
+  Showdown = 'Showdown',
+  BetweenHands = 'Between Hands'
+}
+
+// Update the GameState interface to use the GameStage enum
 interface GameState {
   potSize: number[];
   communityCards: Card[];
   players: Player[];
   actionOn: string | null;
-  gameState: string; // e.g., 'pre-flop', 'flop', 'turn', 'river', 'dealCards', etc.
-}
-
-function generateDealOrder(dealerIndex: number, players: Player[]): number[] {
-  const numPlayers = players.length;
-  let dealOrder: number[] = [];
-
-  // First round: Deal to all players starting from dealerIndex + 1
-  for (let i = 1; i <= numPlayers; i++) {
-    const playerIndex = (dealerIndex + i) % numPlayers;
-    dealOrder.push(playerIndex);
-  }
-
-  // Second round: Repeat the same order
-  for (let i = 1; i <= numPlayers; i++) {
-    const playerIndex = (dealerIndex + i) % numPlayers;
-    dealOrder.push(playerIndex);
-  }
-  return dealOrder;
+  gameState: GameStage; // Now strongly typed using the GameStage enum
 }
 
 function PokerGame() {
@@ -52,7 +44,7 @@ function PokerGame() {
     communityCards: [],
     players: [],
     actionOn: null,
-    gameState: "pre-flop",
+    gameState: GameStage.PreFlop,
   });
 
   const [isDealing, setIsDealing] = useState<boolean>(false);
@@ -79,7 +71,7 @@ function PokerGame() {
       setError(null);
 
       // Handle winner highlighting
-      if (fetchedGameState.gameState === "roundEnded") {
+      if (fetchedGameState.gameState === GameStage.BetweenHands) {
         // Clear any existing timeout
         if (winnerTimeoutRef.current) {
           clearTimeout(winnerTimeoutRef.current);
@@ -88,13 +80,9 @@ function PokerGame() {
         winnerTimeoutRef.current = setTimeout(() => {
           setWinnerHighlighted(null);
           // Optionally, you can reset the game state here or wait for the next poll
-        }, 30000);
+        }, 10000);
       }
 
-      // Handle game state changes
-      if (fetchedGameState.gameState === "dealCards" && !isDealing) {
-        dealCards();
-      }
     } catch (error) {
       console.error("Error fetching game state:", error);
       setError("Failed to fetch game state.");
@@ -118,17 +106,6 @@ function PokerGame() {
       }
     };
   }, []);
-
-  /** Start automated dealing */
-  const dealCards = () => {
-    console.log("Start Dealing Called");
-    if (isDealing) return;
-
-      setIsDealing(true);
-      let playerToReceiveCardNextIndex = 0;
-      playerToReceiveCardNextIndex++;
-
-  };
 
   /** Render Players */
   const renderPlayers = () => {
@@ -204,7 +181,7 @@ function PokerGame() {
           {/* Action On Section */}
           <div className="action-on-section">
               <div className="action-on">
-                <strong>Action on: <span>{ gameState.actionOn && (gameState.players.find(p => p.id === gameState.actionOn)?.name || gameState.actionOn)}</span></strong>
+                <strong>Action on: <span>{ gameState.actionOn.length > 8 ? gameState.actionOn.substring(0, 8) : gameState.actionOn }</span></strong>
               </div>
           </div>
       </div>
