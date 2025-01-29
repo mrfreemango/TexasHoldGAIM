@@ -136,7 +136,7 @@ export class FxnClientInterface {
                             cards: playerState.holeCards,
                             isFolded: playerState.isFolded,
                             isDealer: playerState.isDealer,
-                            isWinner: playerState.isDealer,
+                            isWinner: playerState.isWinner,
                             avatar: ""
                         }
                     }),

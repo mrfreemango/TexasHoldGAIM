@@ -15,7 +15,7 @@
 }
 
 /* Highlight dealer */
-.player-container.dealing {
+.player-container.winner {
   animation: highlight 1s infinite;
 }
 

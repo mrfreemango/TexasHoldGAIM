@@ -30,12 +30,12 @@ const PlayerComp: React.FC<PlayerProps> = ({ name, avatar, money, cards, isDeale
         )}
         <div className="player-cards">
           {cards.map((card, idx) => (
-            <CardComp key={idx} card={`${card.rank}${card.suit}`} faceUp={true} />
+            <CardComp key={idx} card={card} faceUp={true} />
           ))}
         </div>
       </div>
       <div className="player-bottom-row">
-        <div className="player-name">{isDealer && <span>(D) </span>}{name}</div>
+        <div className="player-name">{isDealer && <span>(D) </span>}{name.length > 8 ? name.substring(0, 8): name}</div>
         <div className="player-money">${money.toFixed(2)}</div>
       </div>
     </div>

@@ -28,6 +28,24 @@ interface GameState {
   gameState: string; // e.g., 'pre-flop', 'flop', 'turn', 'river', 'dealCards', etc.
 }
 
+function generateDealOrder(dealerIndex: number, players: Player[]): number[] {
+  const numPlayers = players.length;
+  let dealOrder: number[] = [];
+
+  // First round: Deal to all players starting from dealerIndex + 1
+  for (let i = 1; i <= numPlayers; i++) {
+    const playerIndex = (dealerIndex + i) % numPlayers;
+    dealOrder.push(playerIndex);
+  }
+
+  // Second round: Repeat the same order
+  for (let i = 1; i <= numPlayers; i++) {
+    const playerIndex = (dealerIndex + i) % numPlayers;
+    dealOrder.push(playerIndex);
+  }
+  return dealOrder;
+}
+
 function PokerGame() {
   const [gameState, setGameState] = useState<GameState>({
     potSize: [],
@@ -54,6 +72,8 @@ function PokerGame() {
       }
 
       const fetchedGameState: GameState = await response.json();
+      console.log(fetchedGameState)
+      fetchedGameState.players = fetchedGameState.players.filter((player): player is Player => player !== null)
       setGameState(fetchedGameState);
       setLoading(false);
       setError(null);
@@ -84,13 +104,11 @@ function PokerGame() {
 
   /** Initialize polling on component mount */
   useEffect(() => {
-    // Initial fetch
     fetchGameState();
 
     // Set up polling every 10 seconds
-    pollingIntervalRef.current = setInterval(fetchGameState, 10000);
+    pollingIntervalRef.current = setInterval(fetchGameState, 5000);
 
-    // Cleanup on unmount
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -99,56 +117,49 @@ function PokerGame() {
         clearTimeout(winnerTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** Deal cards based on the game state */
+  /** Start automated dealing */
   const dealCards = () => {
-    setIsDealing(true);
-    // Implement any client-side dealing animations or UI updates here
-    // For example, you might animate the dealing of community cards one by one
+    console.log("Start Dealing Called");
+    if (isDealing) return;
 
-    // Example: Simulate dealing community cards with delays
-    const dealSequence = async () => {
-      for (let i = 0; i < gameState.communityCards.length; i++) {
-        // Here, you might trigger animations or update local state for each card
-        // Since the server manages the game state, ensure that the UI reflects the fetched state
-        await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second between each card
-      }
-      setIsDealing(false);
-    };
+      setIsDealing(true);
+      let playerToReceiveCardNextIndex = 0;
+      playerToReceiveCardNextIndex++;
 
-    dealSequence();
   };
 
   /** Render Players */
   const renderPlayers = () => {
-    return gameState.players.map((player, index) => (
-      <div
-        key={player.id}
-        className={`player-spot player-${index + 1} ${
-          player.isDealer ? "dealer" : ""
-        } ${player.isFolded ? "folded" : ""} ${
-          winnerHighlighted === player.id ? "winner-highlight" : ""
-        }`}
-      >
-        <PlayerComp
-          name={player.name}
-          avatar={player.avatar}
-          money={player.money}
-          cards={player.cards}
-          isFolded={player.isFolded}
-          isDealer={player.isDealer}
-          isWinner={player.isWinner}
-        />
-      </div>
-    ));
+    return gameState.players
+      .filter((player): player is Player => player !== null) // TypeScript type guard
+      .map((player, index) => (
+        <div
+          key={player.id}
+          className={`player-spot player-${index + 1} ${
+            player.isDealer ? "dealer" : ""
+          } ${player.isFolded ? "folded" : ""} ${
+            winnerHighlighted === player.id ? "winner-highlight" : ""
+          }`}
+        >
+          <PlayerComp
+            name={player.id}
+            avatar={player.avatar}
+            money={player.money}
+            cards={player.cards}
+            isFolded={player.isFolded}
+            isDealer={player.isDealer}
+            isWinner={player.isWinner}
+          />
+        </div>
+      ));
   };
 
   /** Render Community Cards */
   const renderCommunityCards = () => {
     return gameState.communityCards.map((card, idx) => (
-      <CardComp key={idx} card={`${card.rank}${card.suit}`} faceUp={true} />
+      <CardComp key={idx} card={card} faceUp={true} />
     ));
   };
 
@@ -165,7 +176,7 @@ function PokerGame() {
       <div className="game-info">
         {/* Pot Sizes Section */}
         <div className="pot-sizes-section">
-            {Array.isArray(gameState.potSize) && gameState.potSize.length > 1 ? (
+            {gameState.potSize !== null && Array.isArray(gameState.potSize) && gameState.potSize.length > 1 ? (
               // If there are multiple pot sizes, display them in a list
               <div>
                 <strong>Pot Sizes:</strong>
