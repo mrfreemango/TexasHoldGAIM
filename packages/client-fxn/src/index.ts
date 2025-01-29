@@ -88,19 +88,23 @@ export class FxnClientInterface {
 
                     // Determine an action to take and a bet size if applicable
                     const prompt = this.generatePokerPrompt(tableState, playerState, actionHistory);
-                    const output = await generateText({
+                    const rawOutput = await generateText({
                         runtime: this.runtime,
                         context: prompt,
                         modelClass: ModelClass.SMALL,
                         stop: null
                     });
 
-                    console.log(output);
+                    // console.log("Raw Output:", rawOutput);
+
+                    const parsedOutput = JSON.parse(rawOutput);
+                    console.log("Parsed action:", parsedOutput.action);
+                    console.log("Parsed betSize:", parsedOutput.betSize);
 
                     // Include it in the response
                     return res.json({
-                        action: "check",
-                        betSize: 0
+                        action: parsedOutput.action,
+                        betSize: parsedOutput.betSize
                     });
                 } else {
                     // Return success
