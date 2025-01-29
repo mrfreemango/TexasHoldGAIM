@@ -219,6 +219,7 @@ export class PokerManager {
 
         if (this.tableState.isHandInProgress) {
             if (this.tableState.isBettingRoundInProgress) {
+                console.log("Betting round:", this.tableState.roundOfBetting);
                 await this.BroadcastBettingRound();
                 this.updateTableState();
                 this.updatePlayerStates();
@@ -391,14 +392,14 @@ export class PokerManager {
         const bettingRoundsCompleted = handinProgress ? this.table.areBettingRoundsCompleted() : false;
 
         this.tableState.emptySeats = this.getEmptySeats();
-        this.tableState.button = handinProgress ? this.table.button() : null;
+        this.tableState.button = handinProgress ? this.table.button() : this.tableState.button;
         
         this.tableState.isHandInProgress = handinProgress;
         this.tableState.isBettingRoundInProgress = bettingRoundInProgress;
         this.tableState.areBettingRoundsCompleted = bettingRoundsCompleted;
         this.tableState.roundOfBetting = handinProgress ? this.table.roundOfBetting() : "none";
-        this.tableState.playerToActSeat = bettingRoundInProgress ? this.table.playerToAct() : null;
-        this.tableState.playerToActKey = bettingRoundInProgress ? this.playerKeys.get(this.tableState.playerToActSeat) : null;
+        this.tableState.playerToActSeat = bettingRoundInProgress ? this.table.playerToAct() : this.tableState.playerToActSeat;
+        this.tableState.playerToActKey = bettingRoundInProgress ? this.playerKeys.get(this.tableState.playerToActSeat) : this.tableState.playerToActKey;
         this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : [],
         this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : [];
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : [];
