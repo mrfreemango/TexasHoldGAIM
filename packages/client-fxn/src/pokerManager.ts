@@ -207,6 +207,9 @@ export class PokerManager {
 
         // TODO: Check for new players to sit, or busted players that stood
 
+        // Reset action history
+        this.actionHistory = new Array<ActionHistoryEntry>();
+        
         // Reset player states for new hand
         this.getFilledSeats().forEach((seatIndex) => {
             this.playerStates[seatIndex].isFolded = false;
