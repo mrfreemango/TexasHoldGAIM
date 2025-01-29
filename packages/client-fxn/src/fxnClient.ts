@@ -146,10 +146,13 @@ export class FxnClient extends EventEmitter {
     }
 
     public async unsubscribeFromHost(): Promise<TransactionSignature> {
-        return await this.solanaAdapter.cancelSubscription({
+        const unsubSig = await this.solanaAdapter.cancelSubscription({
             dataProvider: this.hostPublicKey,
             qualityScore: 100
         });
+
+        console.log("Unsubscribed from host.", unsubSig);
+        return unsubSig;
     }
 
     public async getSubscriptionRequests() {
