@@ -6,6 +6,7 @@ import {IAgentRuntime} from '@ai16z/eliza/src/types.ts';
 import { ActionHistory, ActionHistoryEntry, PlayerState, PokerManager, TableState } from './pokerManager.ts';
 import {FxnClient} from "./fxnClient.ts";
 import {verifyMessage} from "./utils/signingUtils.ts";
+import { generateText, ModelClass } from '@ai16z/eliza';
 
 export class FxnClientInterface {
     private app: express.Express;
@@ -94,7 +95,14 @@ export class FxnClientInterface {
 
                     // Determine an action to take and a bet size if applicable
                     const prompt = this.generatePokerPrompt(tableState, playerState, actionHistory);
-                    console.log(prompt);
+                    const output = await generateText({
+                        runtime: this.runtime,
+                        context: prompt,
+                        modelClass: ModelClass.SMALL,
+                        stop: null
+                    });
+
+                    console.log(output);
 
                     // Include it in the response
                     return res.json({
