@@ -250,18 +250,23 @@ export class FxnClient extends EventEmitter {
 
     public async getUniqueSubscribers(): Promise<SubscriberDetails[]> {
         const subscribers = await this.getSubscribers();
-        let uniqueSubscribers = [];
-        subscribers.forEach((subscriberDetails) => {
-            if (!uniqueSubscribers.includes(subscriberDetails))
-                uniqueSubscribers.push(subscriberDetails);
+        const uniqueSubscribers: SubscriberDetails[] = [];
+        const seenPublicKeys = new Set<string>();
+    
+        subscribers.forEach((subscriber) => {
+          const pubKeyString = subscriber.subscriber.toString(); 
+    
+          if (!seenPublicKeys.has(pubKeyString)) {
+            seenPublicKeys.add(pubKeyString);
+            uniqueSubscribers.push(subscriber);
+          }
         });
-
+    
         return uniqueSubscribers;
-    }
-
+      }
+    
     public async getAliveSubscribers(): Promise<SubscriberDetails[]> {
         const subscribers = await this.getUniqueSubscribers();
-
         // Map first then filter because of async shenanigans
         const promises = subscribers.map(async (subscriber) => {
             const alive = await this.isSubscriberAlive(subscriber);
