@@ -1,25 +1,37 @@
+// components/CardComp.tsx
+
 import React from 'react';
 import './Card.css';
+import { getSuitSymbol, isRedSuit } from './utils';
+
+interface Card {
+  rank: string;
+  suit: string;
+}
 
 interface CardProps {
-  card: string;       // e.g., "A♠", "10♥"
+  card: Card,    // e.g., "clubs", "diamonds", "hearts", "spades"
   faceUp: boolean;    // true if the card is face up
 }
 
-const isRedSuit = (suit: string): boolean => {
-  return suit === '♥' || suit === '♦';
-};
-
 const CardComp: React.FC<CardProps> = ({ card, faceUp }) => {
-  // Extract the suit from the card string (last character)
-  const suit = card.slice(-1);
-  
+  // Get the symbol for the suit
+
+  const suitSymbol = getSuitSymbol(card.suit);
+
   // Determine the color based on the suit
-  const colorClass = faceUp ? (isRedSuit(suit) ? 'red' : 'black') : '';
+  const colorClass = faceUp ? (isRedSuit(card.suit) ? 'red' : 'black') : '';
 
   return (
     <div className={`card ${colorClass} ${faceUp ? '' : 'face-down'}`}>
-      {faceUp ? card : ''}
+      {faceUp ? (
+        <>
+          <span className="card-rank">{card.rank === 'T' ? 10 : card.rank}</span>
+          <span className="card-suit">{suitSymbol}</span>
+        </>
+      ) : (
+        <span className="card-back"></span> // Optionally, display a card back design
+      )}
     </div>
   );
 };
