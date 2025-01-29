@@ -122,72 +122,29 @@ export class FxnClientInterface {
 
     private setupHostRoutes() {
         this.app.get('/current-game-state', async (req, res) => {
+            const tableState = this.gameManager.getTableState();
+            const playerStates = this.gameManager.getPlayerStates();
             try {
-                const hardCodedGameState = {
-                    potSize: [20, 50],
-                    communityCards: [
-                        { rank: 'A', suit: '♠' },
-                        { rank: 'K', suit: '♠' },
-                        { rank: 'Q', suit: '♠' },
-                        { rank: 'J', suit: '♠' },
-                        { rank: '10', suit: '♠' },
-                    ],
-                    players: [
-                        {
-                            id: 'player-1',
-                            name: 'User',
-                            money: 1000,
-                            cards: [
-                                { rank: '3', suit: '♠' },
-                                { rank: '2', suit: '♠' },
-                            ],
-                            isFolded: false,
-                            isDealer: true,
-                            isWinner: false,
-                        },
-                        {
-                            id: 'player-2',
-                            name: 'Player 2',
-                            money: 800,
-                            cards: [
-                                { rank: '5', suit: '♠' },
-                                { rank: '4', suit: '♠' },
-                            ],
-                            isFolded: false,
-                            isDealer: false,
-                            isWinner: false,
-                        },
-                        {
-                            id: 'player-3',
-                            name: 'Player 3',
-                            money: 1200,
-                            cards: [
-                                { rank: '7', suit: '♠' },
-                                { rank: '6', suit: '♠' },
-                            ],
-                            isFolded: false,
-                            isDealer: false,
-                            isWinner: false,
-                        },
-                        {
-                            id: 'player-4',
-                            name: 'Player 4',
-                            money: 900,
-                            cards: [
-                                { rank: '9', suit: '♠' },
-                                { rank: '8', suit: '♠' },
-                            ],
-                            isFolded: false,
-                            isDealer: false,
-                            isWinner: false,
-                        },
-                        // Add more players as needed
-                    ],
-                    gameState: "dealCards"
+                const currentGameState = {
+                    potSize: tableState.pots,
+                    communityCards: tableState.communityCards,
+                    players: playerStates.map((playerState) => {
+                        return {
+                            id: playerState.publicKey,
+                            name: playerState.name,
+                            money: playerState.stack,
+                            cards: playerState.holeCards,
+                            isFolded: playerState.isFolded,
+                            isDealer: playerState.isDealer,
+                            isWinner: playerState.isDealer,
+                            avatar: ""
+                        }
+                    }),
+                    gameState: tableState.gameStateString
                 };
 
                 // Send the hard-coded game state as a JSON response
-                res.json(hardCodedGameState);
+                res.json(currentGameState);
             } catch (error) {
                 console.error('Error serving host view:', error);
                 res.status(500).send('Internal Server Error');
