@@ -108,6 +108,8 @@ export class PokerManager {
     private tableEmptyTimer: NodeJS.Timeout | null = null;
     public readonly NEW_HAND_DELAY: number = 5 * 1000; // 5s delay
     private newHandTimer: NodeJS.Timeout | null = null;
+    public readonly BROADCAST_DELAY: number = 5 * 1000; // 5s delay
+    private broadcastTimer: NodeJS.Timeout | null = null;
 
     constructor(private fxnClient: FxnClient) {
         this.table = new Table({ante: ANTE, bigBlind: BIG_BLIND, smallBlind: SMALL_BLIND}, MAX_PLAYERS);
@@ -153,7 +155,7 @@ export class PokerManager {
                 if (!this.isSeated(publicKey)) {
                     const seatIndex = this.getEmptySeats().pop();
                     const buyIn = 300;
-                    this.addPlayer(publicKey, seatIndex, buyIn);
+                    this.addPlayer(publicKey, seatIndex, buyIn, subscriberDetails.subscription.recipient);
                     console.log(`Seated ${publicKey} at chair ${seatIndex} with ${buyIn} chips.`);
                 }
             });
@@ -185,38 +187,48 @@ export class PokerManager {
         this.table.startHand();
         this.updateTableState();
         this.updatePlayerStates();
+        const playerStates = this.getPlayerStates();
+        playerStates.forEach((playerState) => {
+            const cards = playerState.holeCards;
+            const cardsString = `${cards[0].rank} of ${cards[0].suit} and ${cards[1].rank} of ${cards[1].suit}`;
+            console.log(`Dealt ${cardsString} to ${playerState.name}`);
+        })
 
         this.BroadcastHand();
     }
 
     private async BroadcastHand(): Promise<void> {
-        while (this.tableState.isHandInProgress) {
-            while (this.tableState.isBettingRoundInProgress) {
+        if (this.broadcastTimer) {
+            clearTimeout(this.broadcastTimer);
+        }
+
+        if (this.tableState.isHandInProgress) {
+            if (this.tableState.isBettingRoundInProgress) {
                 await this.BroadcastBettingRound();
                 this.updateTableState();
                 this.updatePlayerStates();
-            }
+            } else {
+                console.log("Betting round over.");
+                this.table.endBettingRound();
+                this.updateTableState();
 
-            console.log("Betting round over.");
-            this.table.endBettingRound();
-            this.updateTableState();
-
-            if (this.tableState.areBettingRoundsCompleted) {
-                await this.BroadcastShowdown();
+                if (this.tableState.areBettingRoundsCompleted) {
+                    await this.BroadcastShowdown();
+                }
             }
+        } else {
+            this.tableState.winners.forEach((winner) => {
+                console.log(`Seat ${winner.seatIndex} wins ${winner.winnings} with ${HandRankingStr[winner.ranking]}!`);
+            })
+    
+            console.log(`Hand over! Starting next hand in ${this.NEW_HAND_DELAY / 1000}s.`);
+            this.newHandTimer = setTimeout(() => {this.startNewHand()}, this.NEW_HAND_DELAY);
         }
 
-        this.tableState.winners.forEach((winner) => {
-            console.log(`Seat ${winner.seatIndex} wins ${winner.winnings} with ${HandRankingStr[winner.ranking]}!`);
-        })
-
-        console.log(`Hand over! Starting next hand in ${this.NEW_HAND_DELAY / 1000}s.`);
-        this.newHandTimer = setTimeout(() => {this.startNewHand()}, this.NEW_HAND_DELAY);
+        this.broadcastTimer = setTimeout(() => {this.BroadcastHand()}, this.BROADCAST_DELAY);
     }
 
     private async BroadcastBettingRound() {
-        console.log("Starting betting round: " + this.tableState.roundOfBetting);
-
         const playerToActSeat: SeatIndex = this.table.playerToAct();
         const playerToActKey: PublicKey = this.playerKeys.get(playerToActSeat);
 
@@ -232,12 +244,9 @@ export class PokerManager {
 
                 // Only broadcast if the subscriber is active
                 if (recipient && subscriberDetails.status === 'active') {
-                    const cards = playerState.holeCards;
-                    const cardsString = `${cards[0].rank} of ${cards[0].suit} and ${cards[1].rank} of ${cards[1].suit}`;
-                    console.log("Broadcasting to " + recipient + " cards: " + cardsString);
 
                     if (publicKey == playerToActKey) {
-                        console.log(`Prompting ${playerToActKey} for action`);
+                        console.log(`Prompting ${recipient} for action`);
 
                         let action: Action = "fold";
                         let betSize = 0;
@@ -386,7 +395,7 @@ export class PokerManager {
         return this.tableState;
     }
 
-    private addPlayer(publicKey: PublicKey, seatIndex: SeatIndex, buyIn: number)
+    private addPlayer(publicKey: PublicKey, seatIndex: SeatIndex, buyIn: number, name: string)
     {
         this.table.sitDown(seatIndex, buyIn);
         this.playerKeys.set(seatIndex, publicKey);
@@ -394,7 +403,7 @@ export class PokerManager {
         this.playerStates[seatIndex] = {
             publicKey: publicKey,
             seat: seatIndex,
-            name: `Seat ${seatIndex}`,
+            name: name,
 
             holeCards: new Array<Card>(),
             isDealer: false,

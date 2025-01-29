@@ -197,8 +197,6 @@ export class FxnClient extends EventEmitter {
                 const signedPayload = await signMessage(keypair, content);
                 const recipient = subscriber.subscription?.recipient;
 
-                console.log('Subscriber fields are ', recipient, subscriber.status);
-
                 if (recipient && subscriber.status === 'active') {
                     return fetch(recipient, {
                         method: 'POST',
@@ -226,8 +224,6 @@ export class FxnClient extends EventEmitter {
 
             const signedPayload = await signMessage(keypair, content);
             const recipient = subscriber.subscription?.recipient;
-
-            console.log('Subscriber fields are ', recipient, subscriber.status);
 
             if (recipient && subscriber.status === 'active') {
                 return fetch(recipient, {
