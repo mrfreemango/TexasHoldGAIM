@@ -194,7 +194,7 @@ export class PokerManager {
         this.getFilledSeats().forEach((seatIndex) => {
             this.playerStates[seatIndex].isFolded = false;
             this.playerStates[seatIndex].isDealer = false;
-            this.playerStates[seatIndex].isDealer = false;
+            this.playerStates[seatIndex].isWinner= false;
         });
 
         this.tableState.pots = [];
