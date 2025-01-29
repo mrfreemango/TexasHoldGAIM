@@ -140,7 +140,7 @@ export class FxnClientInterface {
                             avatar: ""
                         }
                     }),
-                    actionOn: tableState.playerToActSeat,
+                    actionOn: tableState.playerToActName,
                     gameState: tableState.gameStateString,
                 };
 

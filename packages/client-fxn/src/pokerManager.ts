@@ -64,6 +64,7 @@ export interface TableState {
     isBettingRoundInProgress: boolean,
     areBettingRoundsCompleted: boolean,
     roundOfBetting: RoundOfBetting,
+    playerToActName: string,
     playerToActSeat: SeatIndex,
     playerToActKey: PublicKey,
     playerToActLegalActions: Array<Action>,
@@ -129,6 +130,7 @@ export class PokerManager {
             forcedBets: {ante: -1, bigBlind: -1, smallBlind: -1},
             numSeats: -1,
             isHandInProgress: false,
+            playerToActName: "",
             playerToActSeat: -1,
             playerToActKey: "",
             playerToActLegalActions: new Array<Action>(),
@@ -400,6 +402,7 @@ export class PokerManager {
         this.tableState.roundOfBetting = handinProgress ? this.table.roundOfBetting() : "none";
         this.tableState.playerToActSeat = bettingRoundInProgress ? this.table.playerToAct() : this.tableState.playerToActSeat;
         this.tableState.playerToActKey = bettingRoundInProgress ? this.playerKeys.get(this.tableState.playerToActSeat) : this.tableState.playerToActKey;
+        this.tableState.playerToActName = this.getPlayerName(this.tableState.playerToActSeat);
         this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : [],
         this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : [];
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : [];
@@ -437,6 +440,14 @@ export class PokerManager {
         assert(seatIndex, `Error: public key ${publicKey} is not seated.`);
 
         return seatIndex;
+    }
+
+    private getPlayerName(seatIndex: SeatIndex): string {
+        const player = this.playerStates.find((playerState) => {playerState.seat == this.tableState.playerToActSeat});
+        if (player)
+            return player.name;
+
+        return "";
     }
 
     private isSeated(publicKey: PublicKey): boolean {
