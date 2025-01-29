@@ -37,7 +37,7 @@ export class FxnClientInterface {
         }
         if (role === 'HOST') {
             this.setupHostRoutes();
-            // this.setupGameLoop();
+            this.setupGameLoop();
         }
         const port = this.runtime.getSetting("SERVER_PORT") || 3000;
         this.app.listen(port, () => {

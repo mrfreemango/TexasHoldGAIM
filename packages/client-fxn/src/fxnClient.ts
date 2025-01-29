@@ -179,6 +179,20 @@ export class FxnClient extends EventEmitter {
         });
     }
 
+    public async isSubscriberAlive(subscriber: SubscriberDetails): Promise<boolean> {
+        const recipient = subscriber.subscription?.recipient;
+        if (!recipient)
+            return false;
+
+        let alive = true;
+        await fetch(recipient).catch((_error) => {
+            console.log(`Subscriber endpoint ${recipient} is not alive.`);
+            alive = false;
+        });
+
+        return alive;
+    }
+
     /**
      * todo configure the content format
      * @param content
@@ -251,6 +265,17 @@ export class FxnClient extends EventEmitter {
             console.log("No subscribers found!");
             return [];
         }
+    }
+
+    public async getAliveSubscribers(): Promise<SubscriberDetails[]> {
+        const subscribers = await this.getSubscribers();
+        const promises = subscribers.map(async (subscriber) => {
+            const isAlive = await this.isSubscriberAlive(subscriber);
+            if(isAlive)
+                return subscriber;
+        });
+
+        return Promise.all(promises);
     }
 
     public async getHostSubscribers(): Promise<SubscriberDetails[]> {
