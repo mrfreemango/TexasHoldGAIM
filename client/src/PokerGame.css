@@ -1,0 +1,214 @@
+  /* Table container */
+  .table-container {
+    width: 85vw;
+    height: 85vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .game-info {
+    left: 1%;
+    top: 1%;
+    position: absolute;
+    background-color: black;
+    color: white;
+    width: 25%;
+    border: 1px white solid;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 8px; 
+  }
+  
+  .pot-sizes-section,
+  .action-on-section {
+    flex: 1; /* Distribute available space equally */
+    margin: 0 10px; /* Horizontal spacing between sections */
+  }
+  
+  .pot-sizes-list {
+    list-style-type: none; /* Remove default bullets */
+    padding: 0;
+    margin: 0;
+  }
+  
+  .pot-sizes-list .pot-size {
+    border-radius: 4px;
+    font-weight: bold;
+  }
+  
+  .pot-size {
+    font-weight: bold;
+    color: gold;
+  }
+  
+
+  /* Responsive Design: Adjust layout for smaller screens */
+  @media (max-width: 780px) {
+    .game-info {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .pot-sizes-section,
+    .action-on-section {
+      margin: 5px 0;
+    }
+  }
+  /* Table with brown border and green center */
+  .table {
+    width: 100%;
+    height: 100%;
+    background-color: #0A0016;
+    border-radius: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  }
+  
+  .table::before {
+    content: '';
+    width: 90%;
+    height: 90%;
+    background-color: #222A5C;
+    border: #ffffff 5px solid;
+    border-radius: 40px;
+    position: absolute;
+    background-image: url('../public/poker_table.png'); /* Use the correct path */
+    background-size: cover; /* Ensure the image covers the container */
+    background-position: center; /* Center the image */
+    background-repeat: no-repeat; /* Prevent tiling */
+    border-radius: 35px; /* Match table's rounded border */
+    overflow: hidden; /* Prevent background overflow */
+  }
+  
+  /* Player spots around the table */
+  .player-spot {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Example positions for 8 players */
+  .player-spot.player-1 { top: 5%; left: 50%; transform: translate(-50%, -50%); }
+  .player-spot.player-2 { top: 20%; left: 90%; transform: translate(-50%, -50%); }
+  .player-spot.player-3 { top: 50%; right: 5%; transform: translate(50%, -50%); }
+  .player-spot.player-4 { bottom: 20%; right: 10%; transform: translate(50%, 50%); }
+  .player-spot.player-5 { bottom: 5%; left: 50%; transform: translate(-50%, 50%); }
+  .player-spot.player-6 { bottom: 20%; left: 10%; transform: translate(-50%, 50%); }
+  .player-spot.player-7 { top: 50%; left: 5%; transform: translate(-50%, -50%); }
+  .player-spot.player-8 { top: 20%; left: 10%; transform: translate(-50%, -50%); }
+  
+  /* Highlight dealing player */
+  .player-spot.dealing {
+    animation: highlight 1s infinite;
+    z-index: 1; /* Ensure it's above other elements */
+  }
+  
+  /* Define the highlight animation */
+  @keyframes highlight {
+    0% { box-shadow: 0 0 10px 5px yellow; }
+    50% { box-shadow: 0 0 10px 5px orange; }
+    100% { box-shadow: 0 0 10px 5px yellow; }
+  }
+  
+  /* Money display */
+  .money {
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  
+  /* Cards container */
+  .cards {
+    display: flex; /* so the two cards sit side-by-side */
+    gap: 5px;
+  }
+  
+  /* Individual card */
+  .card {
+    width: 50px;
+    height: 70px;
+    background-color: white;
+    border: 2px black solid;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem; /* Optional: Adjust font size as needed */
+  }
+  
+  /* Red suit */
+  .card.red {
+    color: red;
+  }
+  
+  /* Black suit */
+  .card.black {
+    color: black;
+  }
+  
+  .communal-cards-container {
+    position: absolute;
+    top: 45%; /* Adjust as needed */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 1;
+  }
+  
+  .communal-cards {
+    display: flex;
+    gap: 10px; /* Space between cards */
+    margin-top: 10px;
+  }
+  
+  .communal-cards h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: white;
+  }
+
+
+  @media (max-width: 768px) {
+    .table-container {
+      width: 85vw;
+      height: 85vh;
+      overflow-x: auto; /* Enable horizontal scrolling */
+      transform: scale(1); /* No scaling */
+      justify-content: center;
+      padding-top: 100px;
+    }
+  
+    .player-container {
+      flex-direction: column; /* Stack player info if space is tight */
+      align-items: center;
+    }
+  
+    .player-cards {
+      flex-wrap: wrap; /* Wrap cards to prevent overflow */
+      justify-content: center;
+    }
+
+    @media (max-width: 768px) {
+      .player-spot.player-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
+      .player-spot.player-2 { top: 20%; left: 80%; transform: translate(-50%, -50%); }
+      .player-spot.player-3 { top: 60%; right: 15%; transform: translate(50%, -50%); }
+      .player-spot.player-4 { bottom: 20%; right: 20%; transform: translate(50%, 50%); }
+      .player-spot.player-5 { bottom: 10%; left: 50%; transform: translate(-50%, 50%); }
+      .player-spot.player-6 { bottom: 20%; left: 20%; transform: translate(-50%, 50%); }
+      .player-spot.player-7 { top: 60%; left: 15%; transform: translate(-50%, -50%); }
+      .player-spot.player-8 { top: 20%; left: 20%; transform: translate(-50%, -50%); }
+    }
+    
+  }

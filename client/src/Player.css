@@ -1,0 +1,124 @@
+/* Player container with fixed size */
+.player-container {
+  display: flex;
+  flex-direction: column; /* Stack rows vertically */
+  align-items: center;
+  justify-content: space-between;
+  width: 275px; /* Fixed width */
+  height: 175px; /* Fixed height */
+  background-color: #3e1642;
+  border: 2px solid black;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  box-sizing: border-box; /* Include padding in the fixed size */
+}
+
+/* Highlight dealer */
+.player-container.dealing {
+  animation: highlight 1s infinite;
+}
+
+.player-container.folded {
+  background-color: grey;
+}
+
+/* Top row: Avatar and Cards */
+.player-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%; /* Fill the container width */
+  gap: 10px; /* Space between avatar and cards */
+}
+
+/* Avatar styling */
+.player-avatar img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 2px solid black;
+  object-fit: cover;
+}
+
+/* Cards container */
+.player-cards {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  flex-wrap: nowrap;
+}
+
+/* Bottom row: Name and Money */
+.player-bottom-row {
+  display: flex;
+  align-items: center;
+  width: 100%; /* Fill the container width */
+  margin-top: 10px;
+}
+
+/* Player name */
+.player-name {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ffffff;
+  padding-left: 5%;
+}
+
+/* Money */
+.player-money {
+  font-size: 0.9rem;
+  color: gold;
+  font-weight: bold;
+  padding-left: 35%;
+}
+
+/* Highlight animation */
+@keyframes highlight {
+  0% {
+    box-shadow: 0 0 10px 5px yellow;
+  }
+  50% {
+    box-shadow: 0 0 10px 5px orange;
+  }
+  100% {
+    box-shadow: 0 0 10px 5px yellow;
+  }
+}
+
+/* Responsive layout for mobile */
+@media (max-width: 768px) {
+  .player-container {
+    width: 90%; /* Full width on mobile */
+    height: auto; /* Adjust height dynamically */
+    flex-direction: column; /* Stack everything vertically */
+    padding: 15px; /* Add some padding */
+  }
+
+  .player-top-row {
+    justify-content: center; /* Center content */
+    gap: 15px;
+  }
+
+  .player-avatar {
+    display: none; /* Hide the avatar on mobile */
+  }
+
+  .player-cards {
+    justify-content: center; /* Center cards */
+    gap: 8px; /* Space between cards */
+  }
+
+  .player-bottom-row {
+    flex-direction: column; /* Stack name and money vertically */
+    align-items: center;
+    gap: 5px; /* Space between name and money */
+    margin-top: 10px;
+  }
+
+  .player-name,
+  .player-money {
+    font-size: 0.8rem; /* Adjust font size */
+  }
+}
+
