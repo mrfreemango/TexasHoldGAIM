@@ -208,13 +208,14 @@ export class FxnClientInterface {
             Based on this information, decide your next move. You may choose one of the following legal actions: [${legalActions.actions.join(", ")}]
             ${legalActions.chipRange ? `If you choose an action that requires a bet size, it must be a minimum of ${legalActions.chipRange.min}  dollars and a maximum of ${legalActions.chipRange.max} dollars.` : ``}
 
-            Make a decision now and provide a brief explanation for your choice.
+            Make a decision now.
 
             Format Instructions:
-            The output should be a JSON string that is parsable in TypeScript using the JSON.parse method. The JSON should conform to the following schema:
+            Do not include any preamble, only provide a RFC8259 compliant JSON response following this schema:
             {
                 action: string // Your chosen action. Possible values: ${legalActions.actions.join(", ")}
                 betSize: number // The bet size you have chosen, should be 0 if your chosen action does not require a bet size
+                explanation: string // A brief explanation for your choice
             }
         `;
     }
