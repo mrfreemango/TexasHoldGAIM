@@ -406,7 +406,7 @@ export class PokerManager {
         this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : [],
         this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : [];
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : [];
-        this.tableState.gameStateString = handinProgress ? (bettingRoundInProgress ? this.tableState.roundOfBetting : "Showdown") : "Between Hands";
+        this.tableState.gameStateString = handinProgress ? (bettingRoundInProgress ? this.tableState.roundOfBetting : (bettingRoundsCompleted ? "Showdown" : this.tableState.roundOfBetting)) : "Between Hands";
 
         // this.tableState.winners is updated in BroadcastShowdown when winners are determined
     }
