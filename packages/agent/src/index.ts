@@ -278,51 +278,9 @@ const startAgents = async () => {
     } catch (error) {
         console.error("Error starting agents:", error);
     }
-
-    // function chat() {
-    //     const agentId = characters[0].name ?? "Agent";
-    //     rl.question("You: ", (input) => handleUserInput(input, agentId));
-    // }
-
-    console.log("Not starting chat because it fucks everything up");
-    // chat();
 };
 
 startAgents().catch((error) => {
     console.error("Unhandled error in startAgents:", error);
     process.exit(1); // Exit the process after logging
 });
-
-// const rl = readline.createInterface({
-//     input: process.stdin,
-//     output: process.stdout,
-// });
-
-// async function handleUserInput(input, agentId) {
-//     if (input.toLowerCase() === "exit") {
-//         rl.close();
-//         return;
-//     }
-//
-//     try {
-//         const serverPort = parseInt(settings.SERVER_PORT || "3000");
-//
-//         const response = await fetch(
-//             `http://localhost:${serverPort}/${agentId}/message`,
-//             {
-//                 method: "POST",
-//                 headers: { "Content-Type": "application/json" },
-//                 body: JSON.stringify({
-//                     text: input,
-//                     userId: "user",
-//                     userName: "User",
-//                 }),
-//             }
-//         );
-//
-//         const data = await response.json();
-//         data.forEach((message) => console.log(`${"Agent"}: ${message.text}`));
-//     } catch (error) {
-//         console.error("Error fetching response:", error);
-//     }
-// }
