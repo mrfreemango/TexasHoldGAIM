@@ -187,6 +187,16 @@ export class PokerManager {
         }
 
         console.log("Starting new hand.");
+
+        // Reset player states for new hand
+        this.playerStates.forEach((playerState) => {
+            playerState.isFolded = false;
+            playerState.isDealer = false;
+            playerState.isDealer = false;
+        });
+
+        this.tableState.winners = [];
+
         this.table.startHand();
         this.updateTableState();
         this.updatePlayerStates();
@@ -387,9 +397,9 @@ export class PokerManager {
         this.tableState.roundOfBetting = handinProgress ? this.table.roundOfBetting() : "none";
         this.tableState.playerToActSeat = bettingRoundInProgress ? this.table.playerToAct() : null;
         this.tableState.playerToActKey = bettingRoundInProgress ? this.playerKeys.get(this.tableState.playerToActSeat) : null;
-        this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : null,
-        this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : null;
-        this.tableState.communityCards = handinProgress ? this.table.communityCards() : null;
+        this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : [],
+        this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : [];
+        this.tableState.communityCards = handinProgress ? this.table.communityCards() : [];
         this.tableState.gameStateString = handinProgress ? (bettingRoundInProgress ? this.tableState.roundOfBetting : "Showdown") : "Between Hands";
 
         // this.tableState.winners is updated in BroadcastShowdown when winners are determined
