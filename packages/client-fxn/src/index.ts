@@ -220,10 +220,10 @@ export class FxnClientInterface {
             Make a decision now and provide a brief explanation for your choice.
 
             Format Instructions:
-            The output should be a TypeScript code snippet of an Object that conforms to the following interface:
-            interface Output {
-                action: 'fold' | 'check' | 'call' | 'bet' | 'raise', // Your chosen action, selected from the legal actions listed above
-                betSize?: number // The bet size you have chosen, if your chosen action requires a bet size
+            The output should be a JSON string that is parsable in TypeScript using the JSON.parse method. The JSON should conform to the following schema:
+            {
+                action: string // Your chosen action. Possible values: ${legalActions.actions.join(", ")}
+                betSize: number // The bet size you have chosen, should be 0 if your chosen action does not require a bet size
             }
         `;
     }
