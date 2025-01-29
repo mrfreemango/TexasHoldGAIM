@@ -43,6 +43,14 @@ export interface ActionHistoryEntry {
     betSize: BetSize
 };
 
+export interface LegalActions {
+    actions: Action[],
+    chipRange?: {
+        min: BetSize,
+        max: BetSize
+    }
+}
+
 interface Winner {
     seatIndex: SeatIndex,
     ranking: HandRanking,
@@ -73,7 +81,7 @@ export interface TableState {
     playerToActName: string,
     playerToActSeat: SeatIndex,
     playerToActKey: PublicKey,
-    playerToActLegalActions: Array<Action>,
+    playerToActLegalActions: LegalActions,
     pots: Array<number>, // The size of each pot
     communityCards: Array<Card>,
     gameStateString: GameStateString,
@@ -140,7 +148,7 @@ export class PokerManager {
             playerToActName: "",
             playerToActSeat: -1,
             playerToActKey: "",
-            playerToActLegalActions: new Array<Action>(),
+            playerToActLegalActions: {actions: new Array<Action>, chipRange: {min: -1, max: -1}},
             button: -1,
             isBettingRoundInProgress: false,
             pots: new Array<number>(),
@@ -211,7 +219,8 @@ export class PokerManager {
         this.tableState.pots = [];
         this.tableState.communityCards = [];
         this.tableState.winners = [];
-        this.tableState.playerToActLegalActions = [];
+        this.tableState.playerToActLegalActions.actions = [];
+        this.tableState.playerToActLegalActions.chipRange = {min: -1, max: -1};
 
         this.table.startHand();
         this.updateTableState();
@@ -416,7 +425,7 @@ export class PokerManager {
         this.tableState.playerToActSeat = bettingRoundInProgress ? this.table.playerToAct() : this.tableState.playerToActSeat;
         this.tableState.playerToActKey = bettingRoundInProgress ? this.playerKeys.get(this.tableState.playerToActSeat) : this.tableState.playerToActKey;
         this.tableState.playerToActName = this.getPlayerName(this.tableState.playerToActSeat);
-        this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions().actions : this.tableState.playerToActLegalActions,
+        this.tableState.playerToActLegalActions = bettingRoundInProgress ? this.table.legalActions() : this.tableState.playerToActLegalActions,
         this.tableState.pots = handinProgress ? this.table.pots().map((pot) => {return pot.size}) : this.tableState.pots;
         this.tableState.communityCards = handinProgress ? this.table.communityCards() : this.tableState.communityCards;
         this.tableState.gameStateString = handinProgress ? (bettingRoundInProgress ? this.tableState.roundOfBetting : (bettingRoundsCompleted ? "Showdown" : this.tableState.roundOfBetting)) : "Between Hands";
