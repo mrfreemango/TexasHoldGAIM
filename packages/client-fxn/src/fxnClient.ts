@@ -133,10 +133,14 @@ export class FxnClient extends EventEmitter {
         } else {
             // Create a subscription
             const url = this.runtime.getSetting("GAIM_PLAYER_URL");
-            const port = this.runtime.getSetting("SERVER_PORT");
+            if (!url) {
+                console.log("GAIM_PLAYER_URL env variable not set! Cannot subscribe.");
+                return;
+            }
+            
             const [subSig, _] = await this.solanaAdapter.createSubscription({
                 dataProvider: this.hostPublicKey,
-                recipient: `${url}:${port}`,
+                recipient: url,
                 durationInDays: 30
             });
 
