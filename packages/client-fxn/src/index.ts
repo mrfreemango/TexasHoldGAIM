@@ -86,7 +86,7 @@ export class FxnClientInterface {
                 if (tableState.playerToActKey == this.runtime.getSetting("WALLET_PUBLIC_KEY")) {
                     // It is this player's turn
                     const legalActions = tableState.playerToActLegalActions;
-                    console.log("Legal Actions:", legalActions.actions.toString());
+                    console.log("Legal Actions:", legalActions.actions);
                     console.log(`Bet Range: ${legalActions.chipRange?.min} -> ${legalActions.chipRange.max}\n`);
 
                     // Determine an action to take and a bet size if applicable
