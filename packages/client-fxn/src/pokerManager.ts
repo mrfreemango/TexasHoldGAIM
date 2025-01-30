@@ -148,7 +148,7 @@ export class PokerManager {
             playerToActName: "",
             playerToActSeat: -1,
             playerToActKey: "",
-            playerToActLegalActions: {actions: new Array<Action>, chipRange: {min: -1, max: -1}},
+            playerToActLegalActions: {actions: new Array<Action>(), chipRange: {min: -1, max: -1}},
             button: -1,
             isBettingRoundInProgress: false,
             pots: new Array<number>(),
@@ -165,21 +165,8 @@ export class PokerManager {
         this.actionHistory = new Array<ActionHistoryEntry>();
         this.tableState.emptySeats = this.getEmptySeats();
 
-        if (this.tableState.emptySeats.length > 0) {
-            // We have empty seats, seat any alive subscribers
-
-            const aliveSubscribers = await this.fxnClient.getAliveSubscribers();
-            console.log(`Found ${aliveSubscribers.length} live subscribers.`);
-            aliveSubscribers.forEach((subscriberDetails) => {
-                const publicKey = subscriberDetails.subscriber.toString();
-                if (!this.isSeated(publicKey)) {
-                    const seatIndex = this.getEmptySeats().pop();
-                    const buyIn = 300;
-                    this.addPlayer(publicKey, seatIndex, buyIn, publicKey);
-                    console.log(`Seated ${publicKey} at chair ${seatIndex} with ${buyIn} chips.`);
-                }
-            });
-        }
+        await this.kickUnresponsivePlayers();
+        await this.trySeatingPlayers();
 
         if (this.getFilledSeats().length < 2) {
             // There are less than 2 players at the table, check again in X seconds
@@ -198,6 +185,34 @@ export class PokerManager {
         }
     }
 
+    private async kickUnresponsivePlayers() {
+        const aliveSubscribers = await this.fxnClient.getAliveSubscribers();
+        const aliveKeys = aliveSubscribers.map((s) => {return s.subscriber.toString()});
+        this.getSeatedPlayerStates().forEach((playerState) => {
+            if (!aliveKeys.includes(playerState.publicKey)) {
+                console.log(`Kicking unresponsive player ${playerState.publicKey}`);
+                this.removePlayer(playerState.publicKey);
+            }
+        })
+    }
+
+    private async trySeatingPlayers() {
+        if (this.tableState.emptySeats.length > 0) {
+            // We have empty seats, seat any alive subscribers
+            const aliveSubscribers = await this.fxnClient.getAliveSubscribers();
+            console.log(`Found ${aliveSubscribers.length} live subscribers.`);
+            aliveSubscribers.forEach((subscriberDetails) => {
+                const publicKey = subscriberDetails.subscriber.toString();
+                if (!this.isSeated(publicKey)) {
+                    const seatIndex = this.getEmptySeats().pop();
+                    const buyIn = 300;
+                    this.addPlayer(publicKey, seatIndex, buyIn, publicKey);
+                    console.log(`Seated ${publicKey} at chair ${seatIndex} with ${buyIn} chips.`);
+                }
+            });
+        }
+    }
+
     private async startNewHand(): Promise<void> {
         if (this.newHandTimer) {
             clearTimeout(this.newHandTimer);
@@ -205,7 +220,8 @@ export class PokerManager {
 
         console.log("Starting new hand.");
 
-        // TODO: Check for new players to sit, or busted players that stood
+        this.kickUnresponsivePlayers();
+        this.trySeatingPlayers();
 
         // Reset action history
         this.actionHistory = new Array<ActionHistoryEntry>();
@@ -461,6 +477,15 @@ export class PokerManager {
 
             isWinner: false
         }
+    }
+
+    private removePlayer(publicKey: PublicKey) {
+        const seatIndex = this.getSeatIndex(publicKey);
+        this.playerKeys.delete(seatIndex);
+        this.playerSeats.delete(publicKey);
+        this.playerStates[seatIndex] = null;
+
+        this.table.standUp(seatIndex);
     }
 
     private getSeatIndex(publicKey: PublicKey): SeatIndex {
