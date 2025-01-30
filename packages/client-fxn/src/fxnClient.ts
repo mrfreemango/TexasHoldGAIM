@@ -137,7 +137,7 @@ export class FxnClient extends EventEmitter {
                 console.log("GAIM_PLAYER_URL env variable not set! Cannot subscribe.");
                 return;
             }
-            
+
             const [subSig, _] = await this.solanaAdapter.createSubscription({
                 dataProvider: this.hostPublicKey,
                 recipient: url,
@@ -184,8 +184,11 @@ export class FxnClient extends EventEmitter {
             return false;
 
         // ping endpoint for a response
-        const alive = fetch(recipient).then((_response) => {
-            return true;
+        const alive = fetch(recipient).then((response) => {
+            if (response.ok)
+                return true;
+
+            return false
         }).catch((_error) => {
             return false;
         });
