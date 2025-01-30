@@ -216,6 +216,7 @@ export class PokerManager {
             this.playerStates[seatIndex].isDealer = false;
             this.playerStates[seatIndex].isWinner = false;
             this.playerStates[seatIndex].inPots = [];
+            this.playerStates[seatIndex].holeCards = [];
         });
 
         // Reset table state for new hand
@@ -316,7 +317,7 @@ export class PokerManager {
                         });
 
                         // Send the action to the table
-                        console.log("Seat: " + seatIndex + " Action: " + action + " Bet: " + betSize);
+                        console.log("Player: " + this.getPlayerName(seatIndex) + " Action: " + action + " Bet: " + betSize);
                         this.table.actionTaken(action, betSize > 0 ? betSize : null);
 
                         if (action == "fold") {
