@@ -347,7 +347,7 @@ export class PokerManager {
                         // It is not this player's turn
 
                         // Give them their update
-                        return this.fxnClient.broadcastToSubscriber({
+                        this.fxnClient.broadcastToSubscriber({
                             tableState: this.tableState,
                             playerState: playerState,
                             actionHistory: this.actionHistory
@@ -361,7 +361,7 @@ export class PokerManager {
             }
         });
 
-        await Promise.allSettled(promises);
+        await Promise.all(promises);
     }
 
     private async BroadcastShowdown() {
@@ -415,7 +415,7 @@ export class PokerManager {
 
                 // Only broadcast if the subscriber is active
                 if (recipient && subscriberDetails.status === 'active') {
-                    return this.fxnClient.broadcastToSubscriber({
+                    this.fxnClient.broadcastToSubscriber({
                         tableState: this.tableState,
                         playerState: playerState,
                         actionHistory: this.actionHistory
@@ -428,7 +428,7 @@ export class PokerManager {
             }
         });
 
-        await Promise.allSettled(promises);
+        await Promise.all(promises);
     }
 
     private updateTableState() {
