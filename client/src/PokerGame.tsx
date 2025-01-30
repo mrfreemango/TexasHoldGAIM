@@ -57,7 +57,7 @@ function PokerGame() {
   /** Fetch game state from the API using fetch */
   const fetchGameState = async () => {
     try {
-      const response = await fetch("http://localhost:3008/current-game-state");
+      const response = await fetch("/api/current-game-state");
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

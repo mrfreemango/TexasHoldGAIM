@@ -17,7 +17,7 @@ export class FxnClientInterface {
         this.app = express();
         this.app.use(bodyParser.json());
 
-        const allowedOrigin = 'http://localhost:3000'; // Define your frontend origin
+        const allowedOrigin = '*'; // Define your frontend origin
         this.app.use(cors({
             origin: allowedOrigin,
             methods: ['GET', 'POST'],
