@@ -87,7 +87,7 @@ export class FxnClientInterface {
                     // It is this player's turn
                     const legalActions = tableState.playerToActLegalActions;
                     console.log("Legal Actions:", legalActions.actions);
-                    console.log(`Bet Range: ${legalActions.chipRange?.min} -> ${legalActions.chipRange.max}\n`);
+                    console.log(`Bet Range: ${legalActions.chipRange?.min} -> ${legalActions.chipRange?.max}\n`);
 
                     // Determine an action to take and a bet size if applicable
                     const prompt = this.generatePokerPrompt(tableState, playerState, actionHistory);
