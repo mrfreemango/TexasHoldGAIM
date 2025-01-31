@@ -195,7 +195,6 @@ export class FxnClient extends EventEmitter {
 
         // send a ping broadcast to the endpoint
         const alive = await this.broadcastToSubscriber({type: BroadcastType.Ping}, subscriber).then((response) => {
-            console.log(response)
             if (response.ok) {
                 return true;
             } else {

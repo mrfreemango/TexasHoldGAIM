@@ -85,7 +85,7 @@ export class FxnClientInterface {
                 }
 
                 // If this is just a ping or update, respond with 200
-                if (payload.type == BroadcastType.Ping.valueOf() || payload.type == BroadcastType.Update.valueOf()) {
+                if (payload.type == BroadcastType.Ping || payload.type == BroadcastType.Update) {
                     return res.send("Got ping");
                 }
 
