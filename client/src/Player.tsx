@@ -14,25 +14,48 @@ interface PlayerProps {
   isDealer: boolean;
   isFolded: boolean;
   isWinner: boolean;
+  actionOn: string;
+  winnings?: number;
 }
 
-const PlayerComp: React.FC<PlayerProps> = ({ name, money, cards, isDealer, isFolded, isWinner }) => {
+const PlayerComp: React.FC<PlayerProps> = ({
+  name,
+  money,
+  cards,
+  isDealer,
+  isFolded,
+  isWinner,
+  actionOn,
+  winnings = 0,
+}) => {
   return (
-    <div className={
-          `player-container ${isFolded ? "folded" : ""} 
-          ${isWinner ? "winner": ""} 
-          ${isDealer ? "dealer": ""}`
-      }>
-      <div className="player-top-row">
+    <div
+      className={`player-container ${isFolded ? "folded" : ""} 
+        ${isWinner ? "winner" : ""} 
+        ${isDealer && !isWinner ? "dealer" : ""}
+        ${actionOn === name && !isWinner ? "action" : ""}`}
+    >
+      {/* Player Name at the top */}
+      <div className="player-header">
+        <div className="player-name">
+          {name.length > 8 ? name.substring(0, 8) : name}
+        </div>
+      </div>
+      {/* Information row with Money and Cards */}
+      <div className="player-body">
+        <div className="player-info">
+          <div className="player-money">
+            ${money.toFixed(2)}
+            {winnings > 0 && (
+              <span className="player-winnings"> (+${winnings.toFixed(2)})</span>
+            )}
+          </div>
+        </div>
         <div className="player-cards">
           {cards.map((card, idx) => (
             <CardComp key={idx} card={card} faceUp={true} />
           ))}
         </div>
-      </div>
-      <div className="player-bottom-row">
-        <div className="player-name">{name.length > 8 ? name.substring(0, 8): name}</div>
-        <div className="player-money">${money.toFixed(2)}</div>
       </div>
     </div>
   );

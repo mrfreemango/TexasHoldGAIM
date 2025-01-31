@@ -5,8 +5,6 @@ import CardComp from "./Card";
 import PlayerComp from "./Player";
 import './Player.css'
 
-// types.ts or within PokerGame.tsx
-
 interface Card {
   rank: string;
   suit: string;
@@ -20,7 +18,6 @@ interface Player {
   isFolded: boolean;
   isDealer: boolean;
   isWinner: boolean;
-  // avatar: string; // Removed as per requirement
 }
 
 interface ActionLog {
@@ -38,27 +35,46 @@ enum GameStage {
   BetweenHands = 'Between Hands'
 }
 
-interface GameState {
-  potSize: number[];
-  communityCards: Card[];
-  players: (Player | null)[]; // Array of 8 Player or null
-  actionOn: string | null;
-  gameState: GameStage;
-  actionLog: ActionLog[];
+enum PokerHand {
+  HighCard = "High Card",
+  Pair = "Pair",
+  TwoPair = "Two Pair",
+  ThreeOfAKind = "Three Of A Kind",
+  Straight = "Straight",
+  Flush = "Flush",
+  FullHouse = "Full House",
+  FourOfAKind = "Four Of A Kind",
+  StraightFlush = "Straight Flush",
+  RoyalFlush = "Royal Flush",
 }
 
 interface Winner {
   name: string;
-  holeCards: Card[]; 
-  handRanking: string; 
+  winningHand: Card[]; 
+  handRanking: PokerHand; 
   winnings: number;
 }
-// ... (interfaces and enums as defined above)
+
+interface GameState {
+  potSize: number[];
+  communityCards: Card[];
+  players: (Player | null)[];
+  actionOn: string | null;
+  gameState: GameStage;
+  actionLog: ActionLog[];
+  winner: Winner[] | null;
+}
 
 function PokerGame() {
   const [gameState, setGameState] = useState<GameState>({
-    potSize: [100, 200],
-    communityCards: [],
+    potSize: [100],
+    communityCards: [
+      { rank: "6", suit: "spades" },
+      { rank: "7", suit: "spades" },
+      { rank: "8", suit: "spades" },
+      { rank: "4", suit: "diamonds" },
+      { rank: "Q", suit: "clubs" }
+    ],
     players: [
       {
         id: "2JEj9HLqGuMuviAahjuRTEqLwqKK1bXLaPppPxYW5iUb",
@@ -68,10 +84,9 @@ function PokerGame() {
           { rank: "T", suit: "clubs" },
           { rank: "4", suit: "hearts" },
         ],
-        isFolded: false,
-        isDealer: true,
+        isFolded: true,
+        isDealer: false,
         isWinner: false,
-        // avatar: "", // Removed
       },
       {
         id: "8KSsgLoYLSMg21TRb1t7HuJEodTPFC52AZBU8GsHhFMM",
@@ -83,22 +98,34 @@ function PokerGame() {
         ],
         isFolded: false,
         isDealer: false,
-        isWinner: false,
-        // avatar: "", // Removed
+        isWinner: true,
       },
       // Add more players or leave empty seats as null
     ],
     actionOn: "Player 2",
     gameState: GameStage.PreFlop,
-    actionLog: [{
-        player: 'Player 1',
-        action: 'bet', 
-        betSize: 50
-      },
+    winner: [
+      {
+        name: "Player 2",
+        winnings: 100,
+        handRanking: PokerHand.Straight,
+        winningHand: [
+          { rank: "6", suit: "clubs" },
+          { rank: "5", suit: "diamonds" },
+          { rank: "7", suit: "spades" },
+          { rank: "8", suit: "spades" },
+          { rank: "4", suit: "diamonds" }
+        ]
+      }
     ],
+    actionLog: [{
+      player: 'Player 1',
+      action: 'bet', 
+      betSize: 50
+    }],
   });
 
-  const [winnerInfo, setWinnerInfo] = useState<Winner | null>(null)
+  const [winnerInfo, setWinnerInfo] = useState<Winner | null>(null);
   const [isDealing, setIsDealing] = useState<boolean>(false);
   const [winnerHighlighted, setWinnerHighlighted] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -106,9 +133,7 @@ function PokerGame() {
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const winnerTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Since you're not polling, you can remove the fetchGameState and useEffect
-
-  /** Initialize players array to have exactly 8 seats */
+  // Ensure players array has exactly 8 seats
   useEffect(() => {
     setGameState(prevState => {
       const playersWithNulls = [...prevState.players];
@@ -121,8 +146,14 @@ function PokerGame() {
 
   /** Render Players */
   const renderPlayers = () => {
+    const winnersExist = gameState.winner && gameState.winner.length > 0;
     return gameState.players.map((player, index) => {
       if (player) {
+        // If winners exist and this player is not a winner, hide hole cards.
+        const displayCards = winnersExist && !player.isWinner ? [] : player.cards;
+        // If the player is a winner, try to find their winning amount from gameState.winner.
+        const winningRecord = gameState.winner?.find(w => w.name === player.name);
+        const winnings = winningRecord ? winningRecord.winnings : 0;
         return (
           <div
             key={player.id}
@@ -135,33 +166,54 @@ function PokerGame() {
             <PlayerComp
               name={player.name}
               money={player.money}
-              cards={player.cards}
+              cards={displayCards}
               isFolded={player.isFolded}
               isDealer={player.isDealer}
               isWinner={player.isWinner}
+              actionOn={gameState.actionOn}
+              winnings={winnings}  // New prop for displaying winnings
             />
           </div>
         );
       } else {
         return (
-           <div key={`empty-${index}`} className={`player-spot empty-seat player-${index + 1}`}>
-              <div className='player-container'>
+          <div key={`empty-${index}`} className={`player-spot empty-seat player-${index + 1}`}>
+            <div className='player-container'>
               Join the Game Now:
-                <br/>
-                <br/>
+              <br />
+              <br />
               Link to Quick Start Guides
-              </div>
             </div>
+          </div>
         );
       }
     });
   };
 
-  /** Render Community Cards */
-  const renderCommunityCards = () => {
-    return gameState.communityCards.map((card, idx) => (
-      <CardComp key={idx} card={card} faceUp={true} />
-    ));
+  /** Render Community Cards or Winning Hands Horizontally */
+  const renderCommunityOrWinningHands = () => {
+    if (gameState.winner && gameState.winner.length > 0) {
+      return (
+        <div className="winning-hands-container">
+          {gameState.winner.map((winner, index) => (
+            <div key={index} className="winning-hand">
+              {/* <div className="winner-header">
+                <h4>{winner.name} - {winner.handRanking}</h4>
+              </div> */}
+              <div className="winning-hand-cards">
+                {winner.winningHand.map((card, idx) => (
+                  <CardComp key={idx} card={card} faceUp={true} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    } else {
+      return gameState.communityCards.map((card, idx) => (
+        <CardComp key={idx} card={card} faceUp={true} />
+      ));
+    }
   };
 
   if (loading) {
@@ -176,14 +228,13 @@ function PokerGame() {
     <div className="poker-game-container">
       <div className="sidebar">
         <img
-            src="https://fxn-static.s3.us-west-1.amazonaws.com/FXN_Logo-White.png"
-            alt="FXN Logo"
-            className="fxn-logo"
+          src="https://fxn-static.s3.us-west-1.amazonaws.com/FXN_Logo-White.png"
+          alt="FXN Logo"
+          className="fxn-logo"
         />
         <div className="pot-size">
           <div className="pot-sizes-section">
             {Array.isArray(gameState.potSize) && gameState.potSize.length > 1 ? (
-              // If there are multiple pot sizes, display them in a list
               <div>
                 <strong>Pot Sizes:</strong>
                 <ul className="pot-sizes-list">
@@ -195,12 +246,10 @@ function PokerGame() {
                 </ul>
               </div>
             ) : gameState.potSize.length === 1 ? (
-              // If there's only one pot size, display it normally
               <div>
                 <strong>Pot Size: <span className="pot-size">${gameState.potSize[0]}</span></strong>
               </div>
             ) : (
-              // Optional: Handle cases where potSize.length === 0
               <div>
                 <strong>Pot Size: <span className="pot-size">0</span></strong>
               </div>
@@ -209,7 +258,7 @@ function PokerGame() {
         </div>
         <div className="action-on-section">
           <div className="action-on">
-            <strong>Game Phase: <span>{ gameState.gameState }</span></strong>
+            <strong>Game Phase: <span>{gameState.gameState}</span></strong>
           </div>
         </div>
         <div className="action-on-section">
@@ -221,7 +270,8 @@ function PokerGame() {
           {gameState.actionLog.map((action, index) => (
             <div key={index} className="action-log-item">
               <span className="action-player">{action.player}: </span>
-                <span className="action-text">{action.action.toUpperCase()}
+              <span className="action-text">
+                {action.action.toUpperCase()}
                 { action.action === 'bet' && <span className="action-bet"> ${action.betSize}</span>}
               </span>
             </div>
@@ -234,10 +284,10 @@ function PokerGame() {
             {/* Players */}
             {renderPlayers()}
 
-            {/* Communal Cards */}
+            {/* Communal Cards / Winning Hands */}
             <div className="communal-cards-container">
               <div className="communal-cards">
-                {renderCommunityCards()}
+                {renderCommunityOrWinningHands()}
               </div>
             </div>
           </div>

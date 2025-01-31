@@ -15,7 +15,48 @@
   box-sizing: border-box;
 }
 
-.dealer::before {
+.player-header {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 1.1em;
+}
+
+.player-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.player-name {
+  color: white;
+  font-weight: bold;
+}
+
+.player-info {
+  flex: 1;
+  font-size: 0.9em;
+}
+
+.player-money {
+  color: gold;
+  font-weight: bold;
+}
+
+.player-winnings {
+  color: green;
+  font-weight: bolder;
+  margin-left: 4px;
+}
+
+.player-cards {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.player-container.dealer::before {
   content: "D";
   position: absolute;
   top: -8px;
@@ -32,43 +73,31 @@
   color: #000;
 }
 
+.player-container.action::before {
+  content: "A";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 30px;
+  height: 30px;
+  background-color: #018749;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+}
+
 /* Highlight dealer */
 .player-container.winner {
   animation: highlight 1s infinite;
 }
 
+
 .player-container.folded {
-  background-color: grey;
-}
-/* Cards container */
-.player-cards {
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-  flex-wrap: nowrap;
-}
-
-/* Bottom row: Name and Money */
-.player-bottom-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 90%;
-  gap: 5%;
-}
-
-/* Player name */
-.player-name {
-  font-size: 1rem;
-  font-weight: bold;
-  color: #ffffff;
-}
-
-/* Money */
-.player-money {
-  font-size: 0.9rem;
-  color: gold;
-  font-weight: bold;
+  opacity: 60%;
 }
 
 .empty-seat {

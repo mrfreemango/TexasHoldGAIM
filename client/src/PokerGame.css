@@ -29,23 +29,6 @@
     box-sizing: border-box;
   }
 
-  /* Mobile styles */
-@media (max-width: 768px) {
-  .poker-game-container {
-    flex-direction: column; /* Stack sidebar on top of main content */
-    height: auto;
-  }
-  
-  .sidebar {
-    width: 100%;
-    margin-bottom: 10px;
-  }
-  
-  .main-content {
-    width: 100%;
-  }
-}
-
   /* Table container */
   .table-container {
     padding-top: 5%;
@@ -141,7 +124,7 @@
     border: #ffffff 5px solid;
     border-radius: 40px;
     position: absolute;
-    background-image: url('../public/poker_table.png'); /* Use the correct path */
+    background-image: url('../public/poker_table.png');
     background-size: cover; /* Ensure the image covers the container */
     background-position: center; /* Center the image */
     background-repeat: no-repeat; /* Prevent tiling */
@@ -236,6 +219,29 @@
   }
 
 
+  /* .winning-hands-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem; 
+    background-color: black;
+    justify-content: center;
+    color: white;
+    align-items: flex-start;
+  } */
+  
+  /* .winning-hand {
+    border: 1px solid #ccc;
+    padding: 0.5rem;
+    border-radius: 4px;
+  } */
+  
+  .winning-hand-cards {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem; /* Adjust gap between cards as needed */
+  }
+  
+
   @media (max-width: 768px) {
     .table-container {
       width: 85vw;
@@ -245,6 +251,21 @@
       justify-content: center;
       padding-top: 100px;
     }
+
+    .poker-game-container {
+      flex-direction: column; /* Stack sidebar on top of main content */
+      height: auto;
+    }
+    
+    .sidebar {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    .main-content {
+      width: 100%;
+    
+  }
   
     .player-container {
       flex-direction: column; /* Stack player info if space is tight */
@@ -256,15 +277,13 @@
       justify-content: center;
     }
 
-    @media (max-width: 768px) {
-      .player-spot.player-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
-      .player-spot.player-2 { top: 20%; left: 80%; transform: translate(-50%, -50%); }
-      .player-spot.player-3 { top: 60%; right: 15%; transform: translate(50%, -50%); }
-      .player-spot.player-4 { bottom: 20%; right: 20%; transform: translate(50%, 50%); }
-      .player-spot.player-5 { bottom: 10%; left: 50%; transform: translate(-50%, 50%); }
-      .player-spot.player-6 { bottom: 20%; left: 20%; transform: translate(-50%, 50%); }
-      .player-spot.player-7 { top: 60%; left: 15%; transform: translate(-50%, -50%); }
-      .player-spot.player-8 { top: 20%; left: 20%; transform: translate(-50%, -50%); }
-    }
-    
+    .player-spot.player-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
+    .player-spot.player-2 { top: 20%; left: 80%; transform: translate(-50%, -50%); }
+    .player-spot.player-3 { top: 60%; right: 15%; transform: translate(50%, -50%); }
+    .player-spot.player-4 { bottom: 20%; right: 20%; transform: translate(50%, 50%); }
+    .player-spot.player-5 { bottom: 10%; left: 50%; transform: translate(-50%, 50%); }
+    .player-spot.player-6 { bottom: 20%; left: 20%; transform: translate(-50%, 50%); }
+    .player-spot.player-7 { top: 60%; left: 15%; transform: translate(-50%, -50%); }
+    .player-spot.player-8 { top: 20%; left: 20%; transform: translate(-50%, -50%); }
+     
   }
