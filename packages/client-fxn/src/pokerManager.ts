@@ -1,5 +1,5 @@
 import { Table } from "poker-ts";
-import { FxnClient } from "./fxnClient.ts";
+import { BroadcastPayload, BroadcastType, FxnClient } from "./fxnClient.ts";
 import Poker, { Action, Card } from "poker-ts/dist/facade/poker";
 import assert from "assert";
 
@@ -262,6 +262,7 @@ export class PokerManager {
 
         if (this.table.isHandInProgress()) {
             if (this.table.isBettingRoundInProgress()) {
+                this.kickUnresponsivePlayers();
                 console.log("Betting round:", this.table.roundOfBetting());
                 await this.BroadcastBettingRound();
                 this.updateTableState();
@@ -311,13 +312,20 @@ export class PokerManager {
 
                         let action: Action = "fold";
                         let betSize = 0;
+
+                        // Construct the payload
+                        const payload: BroadcastPayload = {
+                            type: BroadcastType.Query,
+                            content: {
+                                tableState: this.tableState,
+                                playerState: playerState,
+                                actionHistory: this.actionHistory
+                            }
+                        }
                         
                         // Await their response
-                        await this.fxnClient.broadcastToSubscriber({
-                            tableState: this.tableState,
-                            playerState: playerState,
-                            actionHistory: this.actionHistory
-                        }, subscriberDetails).then(async (response) => {
+                        await this.fxnClient.broadcastToSubscriber(payload, subscriberDetails)
+                        .then(async (response) => {
                             if (response.ok) {
                                 // Parse their chosen action
                                 const responseData = await response.json();
@@ -346,12 +354,19 @@ export class PokerManager {
                     } else {
                         // It is not this player's turn
 
+                        // Construct the payload
+                        const payload: BroadcastPayload = {
+                            type: BroadcastType.Update,
+                            content: {
+                                tableState: this.tableState,
+                                playerState: playerState,
+                                actionHistory: this.actionHistory
+                            }
+                        }
+
                         // Give them their update
-                        this.fxnClient.broadcastToSubscriber({
-                            tableState: this.tableState,
-                            playerState: playerState,
-                            actionHistory: this.actionHistory
-                        }, subscriberDetails).catch((error) => {
+                        this.fxnClient.broadcastToSubscriber(payload, subscriberDetails)
+                        .catch((error) => {
                             console.log("Error sending update to player.", error);
                         });
                     }
@@ -413,13 +428,19 @@ export class PokerManager {
                 const recipient = subscriberDetails.subscription?.recipient;
                 const playerState = this.playerStates[seatIndex];
 
-                // Only broadcast if the subscriber is active
-                if (recipient && subscriberDetails.status === 'active') {
-                    this.fxnClient.broadcastToSubscriber({
+                // Construct the payload
+                const payload: BroadcastPayload = {
+                    type: BroadcastType.Update,
+                    content: {
                         tableState: this.tableState,
                         playerState: playerState,
                         actionHistory: this.actionHistory
-                    }, subscriberDetails).catch((error) => {
+                    }
+                }
+
+                // Only broadcast if the subscriber is active
+                if (recipient && subscriberDetails.status === 'active') {
+                    this.fxnClient.broadcastToSubscriber(payload, subscriberDetails).catch((error) => {
                         console.log(`Error sending showdown update to player ${recipient}.`, error);
                     });
                 }

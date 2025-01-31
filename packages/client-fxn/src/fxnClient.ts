@@ -22,6 +22,16 @@ interface TransferResult {
     message?: string;
 }
 
+export enum BroadcastType {
+    Ping, // No content, expects a 200 response
+    Update, // Has content, expects a 200 response
+    Query, // Has content, expects a 200 response with content
+}
+
+export interface BroadcastPayload {
+    type: BroadcastType,
+    content?: Object
+}
 
 export class FxnClient extends EventEmitter {
     protected runtime: IAgentRuntime;
@@ -183,9 +193,14 @@ export class FxnClient extends EventEmitter {
         if (!recipient)
             return false;
 
-        // ping endpoint for a response
-        const alive = fetch(recipient).then((_response) => {
-            return true;
+        // send a ping broadcast to the endpoint
+        const alive = await this.broadcastToSubscriber({type: BroadcastType.Ping}, subscriber).then((response) => {
+            console.log(response)
+            if (response.ok) {
+                return true;
+            } else {
+                return false;
+            }
         }).catch((_error) => {
             return false;
         });
@@ -193,7 +208,7 @@ export class FxnClient extends EventEmitter {
         return alive;
     }
 
-    public async broadcastToSubscribers(content: Object, subscribers: Array<SubscriberDetails>) {
+    public async broadcastToSubscribers(payload: BroadcastPayload, subscribers: Array<SubscriberDetails>) {
         const promises = subscribers.map(async (subscriber) => {
             try {
                 const privateKey = this.runtime.getSetting("WALLET_PRIVATE_KEY")!;
@@ -201,7 +216,7 @@ export class FxnClient extends EventEmitter {
                 // Create keypair from private key
                 const keypair = Keypair.fromSecretKey(privateKeyUint8Array);
 
-                const signedPayload = await signMessage(keypair, content);
+                const signedPayload = await signMessage(keypair, payload);
                 const recipient = subscriber.subscription?.recipient;
 
                 if (recipient && subscriber.status === 'active') {
@@ -222,14 +237,14 @@ export class FxnClient extends EventEmitter {
     }
 
     // Only broadcast to a specific subscriber
-    public async broadcastToSubscriber(content: Object, subscriber: SubscriberDetails) {
+    public async broadcastToSubscriber(payload: BroadcastPayload, subscriber: SubscriberDetails) {
         try {
             const privateKey = this.runtime.getSetting("WALLET_PRIVATE_KEY")!;
             const privateKeyUint8Array = bs58.decode(privateKey);
             // Create keypair from private key
             const keypair = Keypair.fromSecretKey(privateKeyUint8Array);
 
-            const signedPayload = await signMessage(keypair, content);
+            const signedPayload = await signMessage(keypair, payload);
             const recipient = subscriber.subscription?.recipient;
 
             if (recipient && subscriber.status === 'active') {

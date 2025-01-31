@@ -4,7 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors'; // Import cors
 import {IAgentRuntime} from '@ai16z/eliza/src/types.ts';
 import { ActionHistory, ActionHistoryEntry, PlayerState, PokerManager, TableState } from './pokerManager.ts';
-import {FxnClient} from "./fxnClient.ts";
+import {BroadcastPayload, BroadcastType, FxnClient} from "./fxnClient.ts";
 import {verifyMessage} from "./utils/signingUtils.ts";
 import { generateText, ModelClass } from '@ai16z/eliza';
 
@@ -76,6 +76,11 @@ export class FxnClientInterface {
                         error: 'Invalid signature',
                         details: 'Message signature verification failed'
                     });
+                }
+
+                // If this is just a ping or update, respond with 200
+                if (payload.type == BroadcastType.Ping || payload.type == BroadcastType.Update) {
+                    return res.status(200);
                 }
 
                 // Generate an action based on the board state
