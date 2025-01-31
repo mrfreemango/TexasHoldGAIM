@@ -4,9 +4,15 @@ import bodyParser from 'body-parser';
 import cors from 'cors'; // Import cors
 import {IAgentRuntime} from '@ai16z/eliza/src/types.ts';
 import { ActionHistory, ActionHistoryEntry, PlayerState, PokerManager, TableState } from './pokerManager.ts';
-import {BroadcastPayload, BroadcastType, FxnClient} from "./fxnClient.ts";
-import {verifyMessage} from "./utils/signingUtils.ts";
+import {BroadcastType, FxnClient} from "./fxnClient.ts";
+import {SignedMessage, verifyMessage} from "./utils/signingUtils.ts";
 import { generateText, ModelClass } from '@ai16z/eliza';
+
+interface PokerPayload {
+    tableState: TableState,
+    playerState: PlayerState,
+    actionHistory: ActionHistory
+}
 
 export class FxnClientInterface {
     private app: express.Express;
@@ -59,7 +65,7 @@ export class FxnClientInterface {
         console.log('Setting up routes for player');
         const handleRequest = async (req: any, res: any) => {
             try {
-                const { publicKey, signature, payload } = req.body;
+                const { publicKey, signature, payload } = req.body as SignedMessage;
 
                 // Get the game master's public key
                 const gameMasterKey = this.runtime.getSetting("GAIM_HOST_PUBLIC_KEY");
@@ -83,10 +89,12 @@ export class FxnClientInterface {
                     return res.status(200);
                 }
 
+                const pokerPayload = payload.content as PokerPayload;
+
                 // Generate an action based on the board state
-                const tableState: TableState = payload.tableState;
-                const playerState: PlayerState = payload.playerState;
-                const actionHistory: ActionHistory = payload.actionHistory;
+                const tableState: TableState = pokerPayload.tableState;
+                const playerState: PlayerState = pokerPayload.playerState;
+                const actionHistory: ActionHistory = pokerPayload.actionHistory;
 
                 if (tableState.playerToActKey == this.runtime.getSetting("WALLET_PUBLIC_KEY")) {
                     // It is this player's turn
