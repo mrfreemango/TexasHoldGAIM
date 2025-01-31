@@ -5,7 +5,7 @@ import {
 import { SolanaAdapter, SubscriberDetails } from 'fxn-protocol-sdk';
 import { AnchorProvider, Wallet } from '@coral-xyz/anchor';
 import { Connection, Keypair, PublicKey, Transaction, TransactionSignature } from '@solana/web3.js';
-import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes/index";
+import bs58 from 'bs58';
 import {signMessage} from "./utils/signingUtils.ts";
 import {
     createTransferInstruction,
