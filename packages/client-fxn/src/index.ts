@@ -86,7 +86,7 @@ export class FxnClientInterface {
 
                 // If this is just a ping or update, respond with 200
                 if (payload.type == BroadcastType.Ping.valueOf() || payload.type == BroadcastType.Update.valueOf()) {
-                    return res.status(200);
+                    return res.send("Got ping");
                 }
 
                 const pokerPayload = payload.content as PokerPayload;
@@ -123,7 +123,7 @@ export class FxnClientInterface {
                     });
                 } else {
                     // Return success
-                    return res.status(200);
+                    return res.sendStatus(200);
                 }
 
             } catch (error) {
