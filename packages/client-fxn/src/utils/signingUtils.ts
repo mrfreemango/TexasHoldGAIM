@@ -5,16 +5,19 @@ import {
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { Buffer } from 'buffer';
 import nacl from 'tweetnacl';
+import { BroadcastPayload } from "../fxnClient";
+
+export interface SignedMessage {
+    payload: BroadcastPayload,
+    signature: string,
+    publicKey: string
+}
 
 // Sender service
-export async function signMessage(keypair: Keypair, payload: any) {
+export async function signMessage(keypair: Keypair, payload: BroadcastPayload): Promise<SignedMessage> {
     try {
         // Convert payload to buffer
-        const payloadBuffer = Buffer.from(
-            typeof payload === 'object' ?
-                JSON.stringify(payload) :
-                String(payload)
-        );
+        const payloadBuffer = Buffer.from(JSON.stringify(payload));
 
         // Sign the message
         const signature = nacl.sign.detached(
@@ -33,18 +36,14 @@ export async function signMessage(keypair: Keypair, payload: any) {
 }
 
 // Receiver service
-export async function verifyMessage(
-    message: { payload: any, signature: string, publicKey: string }
-) {
+export async function verifyMessage(message: SignedMessage) {
     try {
         // Convert signature back to Uint8Array
         const signatureUint8 = bs58.decode(message.signature);
 
         // Convert payload to buffer
         const payloadBuffer = Buffer.from(
-            typeof message.payload === 'object' ?
-                JSON.stringify(message.payload) :
-                String(message.payload)
+            JSON.stringify(message.payload)
         );
 
         // Convert public key string to PublicKey object
