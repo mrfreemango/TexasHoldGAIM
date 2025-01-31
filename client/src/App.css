@@ -5,8 +5,6 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column; /* so that the buttons sit above the table */
-  justify-content: center;
-  align-items: center;
   background-color: #1F2937; /* Background for the area outside the table */
-  padding: 2% 0;
+
 }

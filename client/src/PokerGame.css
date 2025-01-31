@@ -1,39 +1,72 @@
+
+  .poker-game-container {
+    display: flex;
+    height: 100vh; /* or your desired height */
+    width: 100vw;
+  }
+  
+  .sidebar {
+    width: 15%;
+    box-sizing: border-box;
+    padding-top: 1%;
+    padding-left: 1%;
+    background-color: #36454F;
+    border-radius: 10px;
+    color: white;
+  }
+
+  .fxn-logo {
+    width: 50px;
+    height: 50px;
+    right: 1%;
+    top: 1%;
+    position: absolute;
+  }
+  
+  .main-content {
+    width: 80%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+
+  /* Mobile styles */
+@media (max-width: 768px) {
+  .poker-game-container {
+    flex-direction: column; /* Stack sidebar on top of main content */
+    height: auto;
+  }
+  
+  .sidebar {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .main-content {
+    width: 100%;
+  }
+}
+
   /* Table container */
   .table-container {
-    width: 85vw;
+    padding-top: 5%;
+    margin-left: 2%;
+    width: 80vw;
     height: 85vh;
-    display: flex;
     justify-content: center;
     align-items: center;
   }
-  
-  .game-info {
-    left: 1%;
-    top: 1%;
-    position: absolute;
-    background-color: black;
-    color: white;
-    width: 25%;
-    border: 1px white solid;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 10px;
-    border-radius: 8px; 
-  }
+
   
   .pot-sizes-section,
   .action-on-section {
     flex: 1; /* Distribute available space equally */
-    margin: 0 10px; /* Horizontal spacing between sections */
+    margin: 10px 10px; /* Horizontal spacing between sections */
   }
   
   .pot-sizes-list {
     list-style-type: none; /* Remove default bullets */
-    padding: 0;
-    margin: 0;
+    padding-left: 5%;
+    margin-top: 3px;
   }
   
   .pot-sizes-list .pot-size {
@@ -45,8 +78,36 @@
     font-weight: bold;
     color: gold;
   }
-  
 
+  .action-log {
+    height: 77%; /* Adjust max height as needed */
+    overflow-y: auto;
+    padding: 5%;
+    background-color: #0A0016;
+    width: 80%;
+    border-radius: 15px;
+  }
+  
+  .action-log-item {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+    font-weight: bold;
+  }
+  
+  .action-log-item:last-child {
+    border-bottom: none;
+  }
+  
+  .action-player {
+    font-weight: bold;
+  }
+  
+  .action-bet {
+    color: green;
+    font-weight: bolder;
+  }
+  
   /* Responsive Design: Adjust layout for smaller screens */
   @media (max-width: 780px) {
     .game-info {
@@ -86,6 +147,7 @@
     background-repeat: no-repeat; /* Prevent tiling */
     border-radius: 35px; /* Match table's rounded border */
     overflow: hidden; /* Prevent background overflow */
+    opacity: 80%;
   }
   
   /* Player spots around the table */
@@ -98,20 +160,14 @@
   }
   
   /* Example positions for 8 players */
-  .player-spot.player-1 { top: 5%; left: 50%; transform: translate(-50%, -50%); }
-  .player-spot.player-2 { top: 20%; left: 90%; transform: translate(-50%, -50%); }
-  .player-spot.player-3 { top: 50%; right: 5%; transform: translate(50%, -50%); }
-  .player-spot.player-4 { bottom: 20%; right: 10%; transform: translate(50%, 50%); }
-  .player-spot.player-5 { bottom: 5%; left: 50%; transform: translate(-50%, 50%); }
-  .player-spot.player-6 { bottom: 20%; left: 10%; transform: translate(-50%, 50%); }
-  .player-spot.player-7 { top: 50%; left: 5%; transform: translate(-50%, -50%); }
-  .player-spot.player-8 { top: 20%; left: 10%; transform: translate(-50%, -50%); }
-  
-  /* Highlight dealing player */
-  .player-spot.dealing {
-    animation: highlight 1s infinite;
-    z-index: 1; /* Ensure it's above other elements */
-  }
+  .player-spot.player-1 { top: 10%; left: 50%; transform: translate(-50%, -50%); }
+  .player-spot.player-2 { top: 20%; left: 85%; transform: translate(-50%, -50%); }
+  .player-spot.player-3 { top: 50%; right: 15%; transform: translate(50%, -50%); }
+  .player-spot.player-4 { bottom: 20%; right: 15%; transform: translate(50%, 50%); }
+  .player-spot.player-5 { bottom: 10%; left: 50%; transform: translate(-50%, 50%); }
+  .player-spot.player-6 { bottom: 20%; left: 15%; transform: translate(-50%, 50%); }
+  .player-spot.player-7 { top: 50%; left: 15%; transform: translate(-50%, -50%); }
+  .player-spot.player-8 { top: 20%; left: 15%; transform: translate(-50%, -50%); }
   
   /* Define the highlight animation */
   @keyframes highlight {

@@ -9,7 +9,6 @@ interface Card {
 
 interface PlayerProps {
   name: string;
-  avatar: string; // URL or placeholder for the avatar image
   money: number;
   cards: Card[];
   isDealer: boolean;
@@ -17,17 +16,14 @@ interface PlayerProps {
   isWinner: boolean;
 }
 
-const PlayerComp: React.FC<PlayerProps> = ({ name, avatar, money, cards, isDealer, isFolded, isWinner }) => {
-  const isMobile = window.innerWidth <= 768; // Detect mobile devices
-
+const PlayerComp: React.FC<PlayerProps> = ({ name, money, cards, isDealer, isFolded, isWinner }) => {
   return (
-    <div className={`player-container ${isFolded ? "folded" : ""} ${isWinner ? "winner": ""}`}>
+    <div className={
+          `player-container ${isFolded ? "folded" : ""} 
+          ${isWinner ? "winner": ""} 
+          ${isDealer ? "dealer": ""}`
+      }>
       <div className="player-top-row">
-        {!isMobile && (
-          <div className="player-avatar">
-            <img src={`${avatar ? avatar : "default_avatar.png"}`} alt={`${name}'s avatar`} />
-          </div>
-        )}
         <div className="player-cards">
           {cards.map((card, idx) => (
             <CardComp key={idx} card={card} faceUp={true} />
@@ -35,7 +31,7 @@ const PlayerComp: React.FC<PlayerProps> = ({ name, avatar, money, cards, isDeale
         </div>
       </div>
       <div className="player-bottom-row">
-        <div className="player-name">{isDealer && <span>(D) </span>}{name.length > 8 ? name.substring(0, 8): name}</div>
+        <div className="player-name">{name.length > 8 ? name.substring(0, 8): name}</div>
         <div className="player-money">${money.toFixed(2)}</div>
       </div>
     </div>

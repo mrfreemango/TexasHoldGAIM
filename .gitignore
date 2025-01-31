@@ -1,6 +1,9 @@
 node_modules
 /out
 
+.ec2-player-1.env
+.ec2-player-2.env
+.ec2-player-3.env
 .env
 concatenated-output.ts
 embedding-cache.json

@@ -1,17 +1,35 @@
 /* Player container with fixed size */
 .player-container {
+  position: relative; /* Ensure the container is relative */
   display: flex;
-  flex-direction: column; /* Stack rows vertically */
+  flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  width: 275px; /* Fixed width */
-  height: 175px; /* Fixed height */
+  width: 250px;
+  height: 125px;
   background-color: #3e1642;
   border: 2px solid black;
   border-radius: 10px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   padding: 10px;
-  box-sizing: border-box; /* Include padding in the fixed size */
+  box-sizing: border-box;
+}
+
+.dealer::before {
+  content: "D";
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 30px;
+  height: 30px;
+  background-color: gold;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
 }
 
 /* Highlight dealer */
@@ -22,25 +40,6 @@
 .player-container.folded {
   background-color: grey;
 }
-
-/* Top row: Avatar and Cards */
-.player-top-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%; /* Fill the container width */
-  gap: 10px; /* Space between avatar and cards */
-}
-
-/* Avatar styling */
-.player-avatar img {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  border: 2px solid black;
-  object-fit: cover;
-}
-
 /* Cards container */
 .player-cards {
   display: flex;
@@ -53,8 +52,9 @@
 .player-bottom-row {
   display: flex;
   align-items: center;
-  width: 100%; /* Fill the container width */
-  margin-top: 10px;
+  justify-content: center;
+  width: 90%;
+  gap: 5%;
 }
 
 /* Player name */
@@ -62,7 +62,6 @@
   font-size: 1rem;
   font-weight: bold;
   color: #ffffff;
-  padding-left: 5%;
 }
 
 /* Money */
@@ -70,7 +69,15 @@
   font-size: 0.9rem;
   color: gold;
   font-weight: bold;
-  padding-left: 35%;
+}
+
+.empty-seat {
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  text-align: center;
 }
 
 /* Highlight animation */
