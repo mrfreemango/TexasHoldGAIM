@@ -2,7 +2,7 @@ import {
     Keypair,
     PublicKey
 } from "@solana/web3.js";
-import bs58 from "bs58";
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { Buffer } from 'buffer';
 import nacl from 'tweetnacl';
 
